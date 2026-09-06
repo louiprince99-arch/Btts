@@ -38,7 +38,12 @@ function parseCsv(text) {
 
 async function fetchLeagueCsv(code) {
   const url = `https://www.football-data.co.uk/mmz4281/${seasonCode()}/${code}.csv`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; btts-picker/1.0)",
+      Accept: "text/csv,text/plain,*/*",
+    },
+  });
   if (!res.ok) {
     throw new Error(`football-data.co.uk fetch failed for ${code}: ${res.status}`);
   }
