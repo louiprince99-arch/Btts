@@ -1,12 +1,13 @@
-const { LEAGUES, getLeagueStats } = require("./_lib/footballDataCoUk");
+const { LEAGUES, getLeagueStats } = require("./_lib/bundledStats");
 const { getLeagueMatches } = require("./_lib/openfootball");
 const { buildResolver } = require("./_lib/teamMatch");
 const { bttsProbability } = require("./_lib/model");
 
 // GET /api/picks?slate=midweek|saturday
-// No API key required. Stats (with real xG) come from football-data.co.uk;
+// Stats (with real xG) come from a bundled data snapshot (see
+// /data/*.json — refresh by re-generating from a fresh download);
 // fixtures come from the openfootball/england repo (Football.TXT
-// source). Computed live on each call.
+// source), fetched live.
 
 function nextWeekday(from, targetDay) {
   const d = new Date(from);
