@@ -5,9 +5,8 @@ const { bttsProbability } = require("./_lib/model");
 
 // GET /api/picks?slate=midweek|saturday
 // No API key required. Stats (with real xG) come from football-data.co.uk;
-// fixtures come from openfootball's football.json. Computed live on
-// each call — both sources are free static files/CSVs with no
-// meaningful rate limit for this use case.
+// fixtures come from the openfootball/england repo (Football.TXT
+// source). Computed live on each call.
 
 function nextWeekday(from, targetDay) {
   const d = new Date(from);
@@ -48,9 +47,9 @@ module.exports = async (req, res) => {
 
       for (const m of matches) {
         if (!m.date) continue;
-        const kickoff = new Date(`${m.date}T${m.time || "15:00"}:00Z`);
+        const kickoff = new Date(`${m.date}T15:00:00Z`);
         if (kickoff < from || kickoff > to) continue;
-        if (m.score && m.score.ft) continue; // already played
+        if (m.played) continue; // already played
 
         const homeStats = resolve(m.team1);
         const awayStats = resolve(m.team2);
