@@ -1,1 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTTS Picks — Championship / League One / League Two</title>
+<style>
+  :root{
+    --pitch:#0e1f16;
+    --pitch-line:#1c3626;
+    --chalk:#eef2ea;
+    --chalk-dim:#9fb0a3;
+    --gold:#d4a537;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--pitch);
+    color:var(--chalk);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    padding:2rem 1.25rem 4rem;
+  }
+  header{
+    max-width:920px;
+    margin:0 auto 2.5rem;
+  }
+  h1{
+    font-size:1.6rem;
+    font-weight:700;
+    margin:0 0 0.35rem;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    color:var(--chalk-dim);
+    margin:0;
+    font-size:0.95rem;
+  }
+  main{
+    max-width:920px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.5rem;
+  }
+  @media (max-width:720px){
+    main{grid-template-columns:1fr;}
+  }
+  section.slate{
+    background:var(--pitch-line);
+    border-radius:10px;
+    padding:1.25rem 1.25rem 1.5rem;
+  }
+  section.slate h2{
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--chalk-dim);
+    margin:0 0 0.25rem;
+  }
+  section.slate .updated{
+    font-size:0.75rem;
+    color:var(--chalk-dim);
+    margin-bottom:1rem;
+  }
+  ol.picks{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  ol.picks li{
+    display:flex;
+    align-items:baseline;
+    gap:0.75rem;
+    padding:0.6rem 0;
+    border-top:1px solid rgba(255,255,255,0.06);
+  }
+  ol.picks li:first-child{border-top:none;}
+  .rank{
+    color:var(--gold);
+    font-weight:700;
+    font-size:0.95rem;
+    width:1.2rem;
+    flex-shrink:0;
+  }
+  .fixture{flex:1;}
+  .teams{font-weight:600;font-size:0.95rem;}
+  .meta{color:var(--chalk-dim);font-size:0.78rem;margin-top:0.15rem;}
+  .prob{
+    font-weight:700;
+    color:var(--gold);
+    font-size:0.95rem;
+    white-space:nowrap;
+  }
+  .empty{color:var(--chalk-dim);font-size:0.9rem;padding:1rem 0;}
+  footer{
+    max-width:920px;
+    margin:2.5rem auto 0;
+    color:var(--chalk-dim);
+    font-size:0.78rem;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>BTTS Picks</h1>
+  <p>Top 6 by both-teams-to-score probability — Championship, League One, League Two</p>
+</header>
 
+<main>
+  <section class="slate">
+    <h2>Midweek acca</h2>
+    <div class="updated" id="midweek-updated">—</div>
+    <ol class="picks" id="midweek-list"><li class="empty">Loading…</li></ol>
+  </section>
+
+  <section class="slate">
+    <h2>Saturday acca</h2>
+    <div class="updated" id="saturday-updated">—</div>
+    <ol class="picks" id="saturday-list"><li class="empty">Loading…</li></ol>
+  </section>
+</main>
+
+<footer>
+  Probabilities are modelled from each team's home/away scoring and conceding averages
+  (independent-Poisson estimate) — not bookmaker odds or a guarantee. Refreshed weekly.
+</footer>
+
+<script>
+function fmtKickoff(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+function leagueLabel(key){
+  return { championship:'Championship', league_one:'League One', league_two:'League Two' }[key] || key;
+}
+function render(listEl, updatedEl, data){
+  if(!data || !data.picks || !data.picks.length){
+    listEl.innerHTML = '<li class="empty">No picks generated yet — waiting on the next refresh.</li>';
+    updatedEl.textContent = '—';
+    return;
+  }
+  updatedEl.textContent = 'Generated ' + fmtKickoff(data.generatedAt);
+  listEl.innerHTML = data.picks.map((p, i) => `
+    <li>
+      <span class="rank">${i+1}</span>
+      <span class="fixture">
+        <div class="teams">${p.home} vs ${p.away}</div>
+        <div class="meta">${leagueLabel(p.league)} · ${fmtKickoff(p.kickoff)}</div>
+      </span>
+      <span class="prob">${(p.bttsProbability*100).toFixed(0)}%</span>
+    </li>
+  `).join('');
+}
+
+Promise.all([
+  fetch('/api/picks?slate=midweek').then(r => r.json()),
+  fetch('/api/picks?slate=saturday').then(r => r.json()),
+]).then(([midweek, saturday]) => {
+  render(document.getElementById('midweek-list'), document.getElementById('midweek-updated'), midweek);
+  render(document.getElementById('saturday-list'), document.getElementById('saturday-updated'), saturday);
+}).catch(() => {
+  document.getElementById('midweek-list').innerHTML = '<li class="empty">Could not load picks.</li>';
+  document.getElementById('saturday-list').innerHTML = '<li class="empty">Could not load picks.</li>';
+});
+</script>
+</body>
+</html>
