@@ -2,169 +2,296 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BTTS Picks — Championship / League One / League Two</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chirish and Luigi's BTTS Picks</title>
 <style>
   :root{
     --pitch:#0e1f16;
-    --pitch-line:#1c3626;
+    --pitch-line:#172c1f;
+    --card:#1c3626;
     --chalk:#eef2ea;
-    --chalk-dim:#9fb0a3;
+    --chalk-dim:#8ea290;
     --gold:#d4a537;
+    --amber-dim:rgba(212,165,55,0.18);
+    --teal:#3d8f8a;
+    --slate-blue:#6b7fb0;
   }
   *{box-sizing:border-box;}
+  html,body{height:100%;}
   body{
     margin:0;
     background:var(--pitch);
     color:var(--chalk);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-    padding:2rem 1.25rem 4rem;
+    padding:0.6rem 0.6rem calc(0.6rem + env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+    height:100vh;
   }
   header{
-    max-width:920px;
-    margin:0 auto 2.5rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:0.5rem;
+    margin-bottom:0.5rem;
+    flex-shrink:0;
   }
   h1{
-    font-size:1.6rem;
+    font-size:1.05rem;
     font-weight:700;
-    margin:0 0 0.35rem;
+    margin:0;
     letter-spacing:-0.01em;
   }
-  header p{
-    color:var(--chalk-dim);
-    margin:0;
-    font-size:0.95rem;
+  button.refresh{
+    background:var(--card);
+    color:var(--chalk);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:6px;
+    padding:0.3rem 0.6rem;
+    font-size:0.72rem;
+    font-weight:600;
+    cursor:pointer;
   }
+  button.refresh:disabled{ opacity:0.5; }
+
+  .banner{
+    background:var(--amber-dim);
+    border:1px solid rgba(212,165,55,0.35);
+    color:var(--chalk);
+    font-size:0.68rem;
+    line-height:1.3;
+    padding:0.4rem 0.6rem;
+    border-radius:6px;
+    display:none;
+    margin-bottom:0.5rem;
+    flex-shrink:0;
+  }
+
   main{
-    max-width:920px;
-    margin:0 auto;
+    flex:1;
+    min-height:0;
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:1.5rem;
-  }
-  @media (max-width:720px){
-    main{grid-template-columns:1fr;}
+    gap:0.5rem;
   }
   section.slate{
     background:var(--pitch-line);
-    border-radius:10px;
-    padding:1.25rem 1.25rem 1.5rem;
+    border-radius:8px;
+    padding:0.55rem 0.5rem;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    overflow:hidden;
   }
   section.slate h2{
-    font-size:0.85rem;
+    font-size:0.62rem;
     text-transform:uppercase;
-    letter-spacing:0.06em;
+    letter-spacing:0.04em;
     color:var(--chalk-dim);
-    margin:0 0 0.25rem;
+    margin:0;
   }
   section.slate .updated{
-    font-size:0.75rem;
+    font-size:0.6rem;
     color:var(--chalk-dim);
-    margin-bottom:1rem;
+    margin-bottom:0.35rem;
   }
   ol.picks{
     list-style:none;
     margin:0;
     padding:0;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    min-height:0;
   }
-  ol.picks li{
+  ol.picks li.pick{
+    padding:0.28rem 0;
+    border-top:1px solid rgba(255,255,255,0.06);
+    line-height:1.15;
+  }
+  ol.picks li.pick:first-child{border-top:none;}
+  .pick-top{
     display:flex;
     align-items:baseline;
-    gap:0.75rem;
-    padding:0.6rem 0;
-    border-top:1px solid rgba(255,255,255,0.06);
+    gap:0.35rem;
   }
-  ol.picks li:first-child{border-top:none;}
   .rank{
     color:var(--gold);
     font-weight:700;
-    font-size:0.95rem;
-    width:1.2rem;
+    font-size:0.7rem;
+    width:0.9rem;
     flex-shrink:0;
   }
-  .fixture{flex:1;}
-  .teams{font-weight:600;font-size:0.95rem;}
-  .meta{color:var(--chalk-dim);font-size:0.78rem;margin-top:0.15rem;}
+  .fixture{flex:1; min-width:0;}
+  .teams{
+    font-weight:600;
+    font-size:0.72rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .meta{
+    color:var(--chalk-dim);
+    font-size:0.6rem;
+    display:flex;
+    align-items:center;
+    gap:0.3rem;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+  .badge{
+    display:inline-block;
+    font-size:0.55rem;
+    font-weight:700;
+    padding:0 0.25rem;
+    border-radius:3px;
+    flex-shrink:0;
+  }
+  .badge.championship{ background:rgba(212,165,55,0.2); color:var(--gold); }
+  .badge.league_one{ background:rgba(61,143,138,0.25); color:var(--teal); }
+  .badge.league_two{ background:rgba(107,127,176,0.25); color:var(--slate-blue); }
   .prob{
     font-weight:700;
     color:var(--gold);
-    font-size:0.95rem;
+    font-size:0.75rem;
     white-space:nowrap;
+    flex-shrink:0;
   }
-  .empty{color:var(--chalk-dim);font-size:0.9rem;padding:1rem 0;}
-  footer{
-    max-width:920px;
-    margin:2.5rem auto 0;
-    color:var(--chalk-dim);
-    font-size:0.78rem;
+  .empty{color:var(--chalk-dim);font-size:0.72rem;padding:0.5rem 0;}
+  .note{color:var(--chalk-dim);font-size:0.58rem;margin-top:0.2rem;}
+
+  @keyframes pulse{ 0%,100%{opacity:0.4;} 50%{opacity:0.8;} }
+  .skeleton{
+    height:0.7rem;
+    background:rgba(255,255,255,0.08);
+    border-radius:3px;
+    animation:pulse 1.4s ease-in-out infinite;
+    margin:0.4rem 0;
   }
 </style>
 </head>
 <body>
 <header>
   <h1>BTTS Picks</h1>
-  <p>Top 6 by both-teams-to-score probability — Championship, League One, League Two</p>
+  <button class="refresh" id="refresh-btn" onclick="loadPicks()">Refresh</button>
 </header>
+
+<div class="banner" id="coverage-banner"></div>
 
 <main>
   <section class="slate">
-    <h2>Midweek acca</h2>
+    <h2>Midweek</h2>
     <div class="updated" id="midweek-updated">—</div>
-    <ol class="picks" id="midweek-list"><li class="empty">Loading…</li></ol>
+    <ol class="picks" id="midweek-list">
+      <li class="skeleton"></li><li class="skeleton"></li><li class="skeleton"></li>
+    </ol>
   </section>
 
   <section class="slate">
-    <h2>Saturday acca</h2>
+    <h2>Saturday</h2>
     <div class="updated" id="saturday-updated">—</div>
-    <ol class="picks" id="saturday-list"><li class="empty">Loading…</li></ol>
+    <ol class="picks" id="saturday-list">
+      <li class="skeleton"></li><li class="skeleton"></li><li class="skeleton"></li>
+    </ol>
   </section>
 </main>
-
-<footer>
-  Probabilities are modelled from each team's home/away scoring and conceding averages
-  (independent-Poisson estimate) — not bookmaker odds or a guarantee. Refreshed weekly.
-</footer>
 
 <script>
 function fmtKickoff(iso){
   const d = new Date(iso);
-  return d.toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleString('en-GB', { timeZone:'Europe/London', weekday:'short', hour:'2-digit', minute:'2-digit' });
+}
+function fmtGenerated(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('en-GB', { timeZone:'Europe/London', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
 }
 function leagueLabel(key){
   return { championship:'Championship', league_one:'League One', league_two:'League Two' }[key] || key;
 }
-function render(listEl, updatedEl, data){
-  if(!data || !data.picks || !data.picks.length){
-    listEl.innerHTML = '<li class="empty">No picks generated yet — waiting on the next refresh.</li>';
+function leagueShort(key){
+  return { championship:'CHA', league_one:'L1', league_two:'L2' }[key] || key;
+}
+
+function renderSlate(listEl, updatedEl, data, loadFailed){
+  if(loadFailed){
+    listEl.innerHTML = '<li class="empty">Failed to load — tap Refresh.</li>';
     updatedEl.textContent = '—';
     return;
   }
-  const unmatchedNote = (data.unmatchedFixtures && data.unmatchedFixtures.length)
-    ? `<div class="meta" style="margin-top:0.5rem">${data.unmatchedFixtures.length} fixture(s) skipped — team name mismatch between sources</div>`
-    : '';
-  updatedEl.textContent = 'Generated ' + fmtKickoff(data.generatedAt);
-  listEl.innerHTML = data.picks.map((p, i) => `
-    <li>
-      <span class="rank">${i+1}</span>
-      <span class="fixture">
-        <div class="teams">${p.home} vs ${p.away}</div>
-        <div class="meta">${leagueLabel(p.league)} · ${fmtKickoff(p.kickoff)}</div>
-      </span>
-      <span class="prob">${(p.bttsProbability*100).toFixed(0)}%</span>
-    </li>
-  `).join('') + unmatchedNote;
+  if(!data || !data.picks || !data.picks.length){
+    listEl.innerHTML = '<li class="empty">No fixtures in this window.</li>';
+    updatedEl.textContent = 'Checked ' + fmtGenerated(data ? data.generatedAt : new Date().toISOString());
+    return;
+  }
+
+  updatedEl.textContent = 'Updated ' + fmtGenerated(data.generatedAt);
+
+  listEl.innerHTML = data.picks.map((p, i) => {
+    const pct = Math.round(p.bttsProbability * 100);
+    return `
+    <li class="pick">
+      <div class="pick-top">
+        <span class="rank">${i+1}</span>
+        <span class="fixture">
+          <div class="teams">${p.home} v ${p.away}</div>
+          <div class="meta">
+            <span class="badge ${p.league}">${leagueShort(p.league)}</span>
+            <span>${fmtKickoff(p.kickoff)}</span>
+          </div>
+        </span>
+        <span class="prob">${pct}%</span>
+      </div>
+    </li>`;
+  }).join('');
 }
 
-Promise.all([
-  fetch('/api/picks?slate=midweek').then(r => r.json()),
-  fetch('/api/picks?slate=saturday').then(r => r.json()),
-]).then(([midweek, saturday]) => {
-  render(document.getElementById('midweek-list'), document.getElementById('midweek-updated'), midweek);
-  render(document.getElementById('saturday-list'), document.getElementById('saturday-updated'), saturday);
-}).catch(() => {
-  document.getElementById('midweek-list').innerHTML = '<li class="empty">Could not load picks.</li>';
-  document.getElementById('saturday-list').innerHTML = '<li class="empty">Could not load picks.</li>';
-});
+function renderCoverageBanner(results){
+  const allErrors = [];
+  results.forEach(r => {
+    if (r.status === 'fulfilled' && r.value && r.value.leagueErrors) {
+      r.value.leagueErrors.forEach(e => allErrors.push(e.league));
+    }
+  });
+  const uniqueLeagues = [...new Set(allErrors)];
+  const banner = document.getElementById('coverage-banner');
+  if (uniqueLeagues.length) {
+    banner.style.display = 'block';
+    banner.textContent = `${uniqueLeagues.map(leagueLabel).join(' and ')} not available yet this season.`;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function loadPicks(){
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  Promise.allSettled([
+    fetch('/api/picks?slate=midweek').then(r => r.json()),
+    fetch('/api/picks?slate=saturday').then(r => r.json()),
+  ]).then(([midweek, saturday]) => {
+    renderSlate(
+      document.getElementById('midweek-list'),
+      document.getElementById('midweek-updated'),
+      midweek.status === 'fulfilled' ? midweek.value : null,
+      midweek.status !== 'fulfilled'
+    );
+    renderSlate(
+      document.getElementById('saturday-list'),
+      document.getElementById('saturday-updated'),
+      saturday.status === 'fulfilled' ? saturday.value : null,
+      saturday.status !== 'fulfilled'
+    );
+    renderCoverageBanner([midweek, saturday]);
+  }).finally(() => {
+    btn.disabled = false;
+    btn.textContent = 'Refresh';
+  });
+}
+
+loadPicks();
 </script>
 </body>
 </html>
