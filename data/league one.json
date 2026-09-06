@@ -1,0 +1,173 @@
+{
+  "generatedFrom": "all-euro-data-2026-2027.xlsx",
+  "teams": {
+    "Notts County": {
+      "name": "Notts County",
+      "goalsForHome": 2.285,
+      "goalsAgainstHome": 0.44,
+      "goalsForAway": 0.825,
+      "goalsAgainstAway": 1.525
+    },
+    "Leicester": {
+      "name": "Leicester",
+      "goalsForHome": 1.4300000000000002,
+      "goalsAgainstHome": 0.9199999999999999,
+      "goalsForAway": 1.15,
+      "goalsAgainstAway": 1.4249999999999998
+    },
+    "Oxford": {
+      "name": "Oxford",
+      "goalsForHome": 1.14,
+      "goalsAgainstHome": 1.76,
+      "goalsForAway": 1.125,
+      "goalsAgainstAway": 2.305
+    },
+    "Milton Keynes Dons": {
+      "name": "Milton Keynes Dons",
+      "goalsForHome": 0.9450000000000001,
+      "goalsAgainstHome": 2.05,
+      "goalsForAway": 2.285,
+      "goalsAgainstAway": 1.745
+    },
+    "Reading": {
+      "name": "Reading",
+      "goalsForHome": 2.225,
+      "goalsAgainstHome": 1.49,
+      "goalsForAway": 0.9,
+      "goalsAgainstAway": 0.33
+    },
+    "Luton": {
+      "name": "Luton",
+      "goalsForHome": 1.665,
+      "goalsAgainstHome": 0.8200000000000001,
+      "goalsForAway": 1.4700000000000002,
+      "goalsAgainstAway": 1.57
+    },
+    "Barnsley": {
+      "name": "Barnsley",
+      "goalsForHome": 1.575,
+      "goalsAgainstHome": 1.68,
+      "goalsForAway": 1.21,
+      "goalsAgainstAway": 1.06
+    },
+    "Bromley": {
+      "name": "Bromley",
+      "goalsForHome": 0.62,
+      "goalsAgainstHome": 1.2149999999999999,
+      "goalsForAway": 1.27,
+      "goalsAgainstAway": 2.8499999999999996
+    },
+    "Blackpool": {
+      "name": "Blackpool",
+      "goalsForHome": 2.35,
+      "goalsAgainstHome": 1.635,
+      "goalsForAway": 2.0,
+      "goalsAgainstAway": 2.445
+    },
+    "Wycombe": {
+      "name": "Wycombe",
+      "goalsForHome": 1.455,
+      "goalsAgainstHome": 1.66,
+      "goalsForAway": 1.25,
+      "goalsAgainstAway": 1.65
+    },
+    "Bradford": {
+      "name": "Bradford",
+      "goalsForHome": 1.8250000000000002,
+      "goalsAgainstHome": 0.77,
+      "goalsForAway": 0.76,
+      "goalsAgainstAway": 1.26
+    },
+    "Peterboro": {
+      "name": "Peterboro",
+      "goalsForHome": 1.2,
+      "goalsAgainstHome": 0.92,
+      "goalsForAway": 1.405,
+      "goalsAgainstAway": 2.1
+    },
+    "Burton": {
+      "name": "Burton",
+      "goalsForHome": 0.935,
+      "goalsAgainstHome": 0.975,
+      "goalsForAway": 0.41,
+      "goalsAgainstAway": 1.69
+    },
+    "Stevenage": {
+      "name": "Stevenage",
+      "goalsForHome": 0.73,
+      "goalsAgainstHome": 0.9450000000000001,
+      "goalsForAway": 0.495,
+      "goalsAgainstAway": 0.925
+    },
+    "Cambridge": {
+      "name": "Cambridge",
+      "goalsForHome": 1.5699999999999998,
+      "goalsAgainstHome": 1.9200000000000002,
+      "goalsForAway": 0.6,
+      "goalsAgainstAway": 1.395
+    },
+    "Wigan": {
+      "name": "Wigan",
+      "goalsForHome": 1.855,
+      "goalsAgainstHome": 1.875,
+      "goalsForAway": 2.8550000000000004,
+      "goalsAgainstAway": 1.315
+    },
+    "Huddersfield": {
+      "name": "Huddersfield",
+      "goalsForHome": 2.33,
+      "goalsAgainstHome": 0.725,
+      "goalsForAway": 1.845,
+      "goalsAgainstAway": 1.27
+    },
+    "AFC Wimbledon": {
+      "name": "AFC Wimbledon",
+      "goalsForHome": 0.52,
+      "goalsAgainstHome": 1.945,
+      "goalsForAway": 0.9349999999999999,
+      "goalsAgainstAway": 0.9850000000000001
+    },
+    "Leyton Orient": {
+      "name": "Leyton Orient",
+      "goalsForHome": 1.08,
+      "goalsAgainstHome": 2.335,
+      "goalsForAway": 1.305,
+      "goalsAgainstAway": 0.9950000000000001
+    },
+    "Sheffield Weds": {
+      "name": "Sheffield Weds",
+      "goalsForHome": 2.94,
+      "goalsAgainstHome": 1.06,
+      "goalsForAway": 2.62,
+      "goalsAgainstAway": 1.22
+    },
+    "Mansfield": {
+      "name": "Mansfield",
+      "goalsForHome": 1.245,
+      "goalsAgainstHome": 1.225,
+      "goalsForAway": 1.375,
+      "goalsAgainstAway": 2.085
+    },
+    "Doncaster": {
+      "name": "Doncaster",
+      "goalsForHome": 1.25,
+      "goalsAgainstHome": 0.65,
+      "goalsForAway": 0.8800000000000001,
+      "goalsAgainstAway": 0.795
+    },
+    "Plymouth": {
+      "name": "Plymouth",
+      "goalsForHome": 1.325,
+      "goalsAgainstHome": 1.41,
+      "goalsForAway": 0.95,
+      "goalsAgainstAway": 1.83
+    },
+    "Stockport": {
+      "name": "Stockport",
+      "goalsForHome": 2.125,
+      "goalsAgainstHome": 1.31,
+      "goalsForAway": 1.385,
+      "goalsAgainstAway": 1.4449999999999998
+    }
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "generatedFrom": "all-euro-data-2026-2027.xlsx",
+  "teams": {
+    "Newport County": {
+      "name": "Newport County",
+      "goalsForHome": 1.2650000000000001,
+      "goalsAgainstHome": 0.53,
+      "goalsForAway": 0.375,
+      "goalsAgainstAway": 3.29
+    },
+    "Rochdale": {
+      "name": "Rochdale",
+      "goalsForHome": 0.7250000000000001,
+      "goalsAgainstHome": 1.66,
+      "goalsForAway": 0.395,
+      "goalsAgainstAway": 1.3900000000000001
+    },
+    "Oldham": {
+      "name": "Oldham",
+      "goalsForHome": 2.17,
+      "goalsAgainstHome": 0.385,
+      "goalsForAway": 0.74,
+      "goalsAgainstAway": 1.545
+    },
+    "Port Vale": {
+      "name": "Port Vale",
+      "goalsForHome": 1.335,
+      "goalsAgainstHome": 0.845,
+      "goalsForAway": 0.8200000000000001,
+      "goalsAgainstAway": 2.2399999999999998
+    },
+    "Accrington": {
+      "name": "Accrington",
+      "goalsForHome": 2.03,
+      "goalsAgainstHome": 1.455,
+      "goalsForAway": 1.6300000000000001,
+      "goalsAgainstAway": 2.04
+    },
+    "Colchester": {
+      "name": "Colchester",
+      "goalsForHome": 1.75,
+      "goalsAgainstHome": 0.42500000000000004,
+      "goalsForAway": 0.76,
+      "goalsAgainstAway": 2.66
+    },
+    "Barnet": {
+      "name": "Barnet",
+      "goalsForHome": 1.76,
+      "goalsAgainstHome": 1.1800000000000002,
+      "goalsForAway": 0.875,
+      "goalsAgainstAway": 1.085
+    },
+    "Salford": {
+      "name": "Salford",
+      "goalsForHome": 1.415,
+      "goalsAgainstHome": 1.085,
+      "goalsForAway": 0.79,
+      "goalsAgainstAway": 1.235
+    },
+    "Cheltenham": {
+      "name": "Cheltenham",
+      "goalsForHome": 1.02,
+      "goalsAgainstHome": 2.09,
+      "goalsForAway": 1.2850000000000001,
+      "goalsAgainstAway": 1.4649999999999999
+    },
+    "Rotherham": {
+      "name": "Rotherham",
+      "goalsForHome": 1.785,
+      "goalsAgainstHome": 1.82,
+      "goalsForAway": 1.7850000000000001,
+      "goalsAgainstAway": 0.675
+    },
+    "Chesterfield": {
+      "name": "Chesterfield",
+      "goalsForHome": 1.685,
+      "goalsAgainstHome": 0.72,
+      "goalsForAway": 1.475,
+      "goalsAgainstAway": 1.6400000000000001
+    },
+    "Fleetwood Town": {
+      "name": "Fleetwood Town",
+      "goalsForHome": 0.8500000000000001,
+      "goalsAgainstHome": 1.1800000000000002,
+      "goalsForAway": 0.985,
+      "goalsAgainstAway": 2.335
+    },
+    "Crawley Town": {
+      "name": "Crawley Town",
+      "goalsForHome": 0.78,
+      "goalsAgainstHome": 2.465,
+      "goalsForAway": 2.215,
+      "goalsAgainstAway": 0.65
+    },
+    "Crewe": {
+      "name": "Crewe",
+      "goalsForHome": 1.115,
+      "goalsAgainstHome": 1.2,
+      "goalsForAway": 1.63,
+      "goalsAgainstAway": 0.925
+    },
+    "Gillingham": {
+      "name": "Gillingham",
+      "goalsForHome": 1.245,
+      "goalsAgainstHome": 1.515,
+      "goalsForAway": 0.8700000000000001,
+      "goalsAgainstAway": 1.23
+    },
+    "Walsall": {
+      "name": "Walsall",
+      "goalsForHome": 1.6600000000000001,
+      "goalsAgainstHome": 1.59,
+      "goalsForAway": 2.225,
+      "goalsAgainstAway": 1.67
+    },
+    "Grimsby": {
+      "name": "Grimsby",
+      "goalsForHome": 2.395,
+      "goalsAgainstHome": 0.96,
+      "goalsForAway": 1.52,
+      "goalsAgainstAway": 1.63
+    },
+    "Exeter": {
+      "name": "Exeter",
+      "goalsForHome": 1.4749999999999999,
+      "goalsAgainstHome": 0.855,
+      "goalsForAway": 0.8200000000000001,
+      "goalsAgainstAway": 1.59
+    },
+    "Northampton": {
+      "name": "Northampton",
+      "goalsForHome": 0.7,
+      "goalsAgainstHome": 1.315,
+      "goalsForAway": 0.49,
+      "goalsAgainstAway": 0.69
+    },
+    "Swindon": {
+      "name": "Swindon",
+      "goalsForHome": 1.9049999999999998,
+      "goalsAgainstHome": 1.02,
+      "goalsForAway": 0.18,
+      "goalsAgainstAway": 1.7750000000000001
+    },
+    "Tranmere": {
+      "name": "Tranmere",
+      "goalsForHome": 0.855,
+      "goalsAgainstHome": 1.8050000000000002,
+      "goalsForAway": 0.8300000000000001,
+      "goalsAgainstAway": 1.35
+    },
+    "Shrewsbury": {
+      "name": "Shrewsbury",
+      "goalsForHome": 1.09,
+      "goalsAgainstHome": 0.87,
+      "goalsForAway": 1.545,
+      "goalsAgainstAway": 0.8300000000000001
+    },
+    "York": {
+      "name": "York",
+      "goalsForHome": 1.59,
+      "goalsAgainstHome": 1.405,
+      "goalsForAway": 2.51,
+      "goalsAgainstAway": 1.1099999999999999
+    },
+    "Bristol Rvs": {
+      "name": "Bristol Rvs",
+      "goalsForHome": 3.7350000000000003,
+      "goalsAgainstHome": 0.635,
+      "goalsForAway": 2.26,
+      "goalsAgainstAway": 1.2850000000000001
+    }
+  }
+}

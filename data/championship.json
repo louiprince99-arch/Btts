@@ -1,0 +1,173 @@
+{
+  "generatedFrom": "all-euro-data-2026-2027.xlsx",
+  "teams": {
+    "Wolves": {
+      "name": "Wolves",
+      "goalsForHome": 2.305,
+      "goalsAgainstHome": 0.86,
+      "goalsForAway": 1.24,
+      "goalsAgainstAway": 1.355
+    },
+    "Blackburn": {
+      "name": "Blackburn",
+      "goalsForHome": 0.915,
+      "goalsAgainstHome": 1.385,
+      "goalsForAway": 0.54,
+      "goalsAgainstAway": 1.7149999999999999
+    },
+    "Bolton": {
+      "name": "Bolton",
+      "goalsForHome": 1.36,
+      "goalsAgainstHome": 1.1,
+      "goalsForAway": 1.05,
+      "goalsAgainstAway": 2.01
+    },
+    "Preston": {
+      "name": "Preston",
+      "goalsForHome": 1.285,
+      "goalsAgainstHome": 1.7000000000000002,
+      "goalsForAway": 1.0150000000000001,
+      "goalsAgainstAway": 0.99
+    },
+    "Bristol City": {
+      "name": "Bristol City",
+      "goalsForHome": 0.565,
+      "goalsAgainstHome": 2.385,
+      "goalsForAway": 1.6400000000000001,
+      "goalsAgainstAway": 1.94
+    },
+    "Millwall": {
+      "name": "Millwall",
+      "goalsForHome": 1.465,
+      "goalsAgainstHome": 0.95,
+      "goalsForAway": 2.25,
+      "goalsAgainstAway": 1.865
+    },
+    "Charlton": {
+      "name": "Charlton",
+      "goalsForHome": 0.9199999999999999,
+      "goalsAgainstHome": 0.9550000000000001,
+      "goalsForAway": 0.51,
+      "goalsAgainstAway": 1.7049999999999998
+    },
+    "Derby": {
+      "name": "Derby",
+      "goalsForHome": 1.1600000000000001,
+      "goalsAgainstHome": 2.49,
+      "goalsForAway": 0.77,
+      "goalsAgainstAway": 0.905
+    },
+    "Middlesbrough": {
+      "name": "Middlesbrough",
+      "goalsForHome": 2.3449999999999998,
+      "goalsAgainstHome": 0.9849999999999999,
+      "goalsForAway": 1.33,
+      "goalsAgainstAway": 0.77
+    },
+    "Lincoln": {
+      "name": "Lincoln",
+      "goalsForHome": 1.895,
+      "goalsAgainstHome": 0.725,
+      "goalsForAway": 0.825,
+      "goalsAgainstAway": 1.92
+    },
+    "Norwich": {
+      "name": "Norwich",
+      "goalsForHome": 2.4450000000000003,
+      "goalsAgainstHome": 1.4,
+      "goalsForAway": 1.105,
+      "goalsAgainstAway": 1.4500000000000002
+    },
+    "West Brom": {
+      "name": "West Brom",
+      "goalsForHome": 1.0999999999999999,
+      "goalsAgainstHome": 0.79,
+      "goalsForAway": 1.625,
+      "goalsAgainstAway": 2.715
+    },
+    "Portsmouth": {
+      "name": "Portsmouth",
+      "goalsForHome": 1.51,
+      "goalsAgainstHome": 1.305,
+      "goalsForAway": 1.29,
+      "goalsAgainstAway": 1.47
+    },
+    "QPR": {
+      "name": "QPR",
+      "goalsForHome": 2.2800000000000002,
+      "goalsAgainstHome": 0.38,
+      "goalsForAway": 1.705,
+      "goalsAgainstAway": 1.55
+    },
+    "Stoke": {
+      "name": "Stoke",
+      "goalsForHome": 0.42500000000000004,
+      "goalsAgainstHome": 0.905,
+      "goalsForAway": 0.905,
+      "goalsAgainstAway": 2.48
+    },
+    "Swansea": {
+      "name": "Swansea",
+      "goalsForHome": 1.645,
+      "goalsAgainstHome": 1.17,
+      "goalsForAway": 1.81,
+      "goalsAgainstAway": 0.675
+    },
+    "Sheffield United": {
+      "name": "Sheffield United",
+      "goalsForHome": 1.25,
+      "goalsAgainstHome": 1.335,
+      "goalsForAway": 1.495,
+      "goalsAgainstAway": 1.205
+    },
+    "Birmingham": {
+      "name": "Birmingham",
+      "goalsForHome": 1.76,
+      "goalsAgainstHome": 1.22,
+      "goalsForAway": 1.1949999999999998,
+      "goalsAgainstAway": 0.855
+    },
+    "Watford": {
+      "name": "Watford",
+      "goalsForHome": 1.205,
+      "goalsAgainstHome": 1.3,
+      "goalsForAway": 0.765,
+      "goalsAgainstAway": 2.3200000000000003
+    },
+    "Southampton": {
+      "name": "Southampton",
+      "goalsForHome": 2.7649999999999997,
+      "goalsAgainstHome": 1.0150000000000001,
+      "goalsForAway": 1.365,
+      "goalsAgainstAway": 1.1800000000000002
+    },
+    "Burnley": {
+      "name": "Burnley",
+      "goalsForHome": 1.48,
+      "goalsAgainstHome": 1.28,
+      "goalsForAway": 1.065,
+      "goalsAgainstAway": 1.775
+    },
+    "West Ham": {
+      "name": "West Ham",
+      "goalsForHome": 2.445,
+      "goalsAgainstHome": 0.78,
+      "goalsForAway": 1.11,
+      "goalsAgainstAway": 1.965
+    },
+    "Cardiff": {
+      "name": "Cardiff",
+      "goalsForHome": 1.37,
+      "goalsAgainstHome": 1.54,
+      "goalsForAway": 1.275,
+      "goalsAgainstAway": 2.185
+    },
+    "Wrexham": {
+      "name": "Wrexham",
+      "goalsForHome": 1.67,
+      "goalsAgainstHome": 1.14,
+      "goalsForAway": 1.215,
+      "goalsAgainstAway": 0.5650000000000001
+    }
+  }
+}
