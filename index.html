@@ -139,6 +139,9 @@ function render(listEl, updatedEl, data){
     updatedEl.textContent = '—';
     return;
   }
+  const unmatchedNote = (data.unmatchedFixtures && data.unmatchedFixtures.length)
+    ? `<div class="meta" style="margin-top:0.5rem">${data.unmatchedFixtures.length} fixture(s) skipped — team name mismatch between sources</div>`
+    : '';
   updatedEl.textContent = 'Generated ' + fmtKickoff(data.generatedAt);
   listEl.innerHTML = data.picks.map((p, i) => `
     <li>
@@ -149,7 +152,7 @@ function render(listEl, updatedEl, data){
       </span>
       <span class="prob">${(p.bttsProbability*100).toFixed(0)}%</span>
     </li>
-  `).join('');
+  `).join('') + unmatchedNote;
 }
 
 Promise.all([
