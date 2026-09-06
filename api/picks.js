@@ -38,12 +38,19 @@ module.exports = async (req, res) => {
 
     const candidates = [];
     const unmatched = [];
+    const leagueErrors = [];
 
     for (const leagueKey of Object.keys(LEAGUES)) {
-      const [statsByName, matches] = await Promise.all([
-        getLeagueStats(leagueKey),
-        getLeagueMatches(leagueKey),
-      ]);
+      let statsByName, matches;
+      try {
+        [statsByName, matches] = await Promise.all([
+          getLeagueStats(leagueKey),
+          getLeagueMatches(leagueKey),
+        ]);
+      } catch (err) {
+        leagueErrors.push({ league: leagueKey, error: err.message });
+        continue; // one league's failure shouldn't block the others
+      }
       const resolve = buildResolver(statsByName);
 
       for (const m of matches) {
@@ -83,6 +90,7 @@ module.exports = async (req, res) => {
       generatedAt: new Date().toISOString(),
       picks: candidates.slice(0, 6),
       unmatchedFixtures: unmatched, // fixtures skipped due to a name-matching miss
+      leagueErrors, // leagues that failed to load entirely — everything else still returned
     });
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message });
