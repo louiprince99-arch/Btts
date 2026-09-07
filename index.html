@@ -6,183 +6,259 @@
 <title>Chirish and GLS BTTS Picks</title>
 <style>
   :root{
-    --black:#000;
-    --tt-white:#f2f2f2;
-    --tt-yellow:#f4c927;
-    --tt-green:#2fd15c;
-    --tt-cyan:#3ecbe0;
-    --tt-red:#e0473e;
-    --tt-grey:#7a7a7a;
+    --bg-top:#0d1117;
+    --bg-bottom:#05070a;
+    --card:rgba(255,255,255,0.04);
+    --card-border:rgba(255,255,255,0.08);
+    --ink:#f5f7f5;
+    --ink-dim:#8b95a1;
+    --lime:#baff3d;
+    --lime-dim:rgba(186,255,61,0.15);
+    --cyan:#4fd8e8;
+    --violet:#a78bfa;
+    --amber:#ffb84d;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
     margin:0;
-    background:var(--black);
-    color:var(--tt-white);
-    font-family:ui-monospace,"SF Mono","Courier New",monospace;
-    padding:0.5rem;
+    min-height:100%;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(186,255,61,0.06), transparent 45%),
+      radial-gradient(circle at 100% 100%, rgba(79,216,232,0.05), transparent 50%),
+      linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif;
+    padding:0.85rem;
     display:flex;
     flex-direction:column;
-    height:100vh;
-    overflow:hidden;
   }
 
   header{
-    background:var(--tt-yellow);
-    color:var(--black);
     display:flex;
     justify-content:space-between;
     align-items:center;
-    padding:0.35rem 0.6rem;
-    flex-shrink:0;
-    font-weight:700;
+    gap:0.6rem;
+    margin-bottom:0.75rem;
   }
-  header .title{
-    font-size:0.7rem;
-    letter-spacing:0.02em;
-    flex:1;
-    min-width:0;
+  .brand{ display:flex; flex-direction:column; min-width:0; }
+  .brand .name{
+    font-size:0.95rem;
+    font-weight:800;
+    letter-spacing:-0.01em;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  header .page-num{
-    font-size:0.7rem;
-    font-weight:400;
-    opacity:0.75;
-  }
-  button.refresh{
-    background:var(--black);
-    color:var(--tt-yellow);
-    border:none;
-    padding:0.25rem 0.5rem;
-    font-family:inherit;
-    font-size:0.68rem;
+  .brand .live{
+    display:inline-flex;
+    align-items:center;
+    gap:0.3rem;
+    font-size:0.6rem;
     font-weight:700;
-    cursor:pointer;
+    color:var(--lime);
+    letter-spacing:0.06em;
+    margin-top:0.1rem;
   }
-  button.refresh:disabled{ opacity:0.5; }
+  .brand .live .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--lime);
+    box-shadow:0 0 6px var(--lime);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+  button.generate{
+    background:var(--lime);
+    color:#0a1206;
+    border:none;
+    border-radius:999px;
+    padding:0.55rem 1.1rem;
+    font-family:inherit;
+    font-size:0.75rem;
+    font-weight:800;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    flex-shrink:0;
+    box-shadow:0 4px 18px rgba(186,255,61,0.25);
+  }
+  button.generate:active{ transform:scale(0.97); }
+  button.generate:disabled{ opacity:0.5; box-shadow:none; }
 
   .banner{
-    background:var(--tt-red);
-    color:var(--black);
-    font-size:0.65rem;
-    font-weight:700;
-    padding:0.3rem 0.6rem;
+    background:rgba(255,184,77,0.12);
+    border:1px solid rgba(255,184,77,0.3);
+    color:var(--amber);
+    font-size:0.68rem;
+    font-weight:600;
+    padding:0.5rem 0.75rem;
+    border-radius:10px;
     display:none;
-    flex-shrink:0;
+    margin-bottom:0.6rem;
   }
 
   main{
     flex:1;
-    min-height:0;
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:0;
+    gap:0.6rem;
   }
-  section.slate{
+  @media (max-width:480px){
+    main{ grid-template-columns:1fr; }
+  }
+
+  section.slate{ min-width:0; }
+  .slate-head{
     display:flex;
-    flex-direction:column;
-    min-height:0;
-    padding:0.4rem 0.5rem;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:0 0.15rem 0.4rem;
   }
-  section.slate:first-child{
-    border-right:1px dashed #333;
-  }
-  section.slate h2{
-    color:var(--tt-green);
-    font-size:0.72rem;
-    font-weight:700;
-    letter-spacing:0.04em;
+  .slate-head h2{
     margin:0;
+    font-size:0.68rem;
+    font-weight:800;
+    letter-spacing:0.08em;
+    color:var(--ink-dim);
+    text-transform:uppercase;
   }
-  section.slate .updated{
-    color:var(--tt-grey);
-    font-size:0.6rem;
-    margin-bottom:0.3rem;
+  .slate-head .updated{
+    font-size:0.58rem;
+    color:var(--ink-dim);
   }
 
   ol.picks{
     list-style:none;
     margin:0;
     padding:0;
-  }
-  ol.picks li.pick{
-    line-height:1.2;
-    border-top:1px solid #1a1a1a;
-    padding:0.22rem 0;
-  }
-  ol.picks li.pick:first-child{ border-top:none; }
-
-  .row1{
     display:flex;
-    align-items:baseline;
-    gap:0.3rem;
+    flex-direction:column;
+    gap:0.4rem;
   }
+  li.pick{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:0.5rem 0.65rem;
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
+    backdrop-filter:blur(6px);
+  }
+  li.pick.top{
+    border-color:rgba(186,255,61,0.4);
+    box-shadow:0 0 0 1px rgba(186,255,61,0.15), 0 4px 20px rgba(186,255,61,0.08);
+  }
+
   .rank{
-    color:var(--tt-yellow);
-    font-weight:700;
-    font-size:0.68rem;
-    width:0.85rem;
+    width:1.3rem;
+    height:1.3rem;
+    border-radius:50%;
+    background:rgba(255,255,255,0.06);
+    color:var(--ink-dim);
+    font-size:0.62rem;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     flex-shrink:0;
   }
+  li.pick.top .rank{
+    background:var(--lime);
+    color:#0a1206;
+  }
+
+  .fixture{ flex:1; min-width:0; }
   .teams{
-    flex:1;
-    min-width:0;
-    color:var(--tt-white);
-    font-size:0.68rem;
+    font-size:0.72rem;
+    font-weight:700;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .prob{
-    color:var(--tt-yellow);
-    font-weight:700;
-    font-size:0.72rem;
-    flex-shrink:0;
-  }
-  .row2{
-    color:var(--tt-cyan);
+  .meta{
+    display:flex;
+    align-items:center;
+    gap:0.35rem;
+    margin-top:0.15rem;
     font-size:0.58rem;
-    padding-left:1.15rem;
+    color:var(--ink-dim);
   }
-  .row2 .lg{ color:var(--tt-grey); }
+  .tag{
+    font-size:0.54rem;
+    font-weight:800;
+    padding:0.05rem 0.35rem;
+    border-radius:5px;
+    letter-spacing:0.02em;
+  }
+  .tag.championship{ background:rgba(255,184,77,0.15); color:var(--amber); }
+  .tag.league_one{ background:rgba(79,216,232,0.15); color:var(--cyan); }
+  .tag.league_two{ background:rgba(167,139,250,0.15); color:var(--violet); }
 
-  .empty{ color:var(--tt-grey); font-size:0.68rem; padding:0.4rem 0; }
-  .note{ color:var(--tt-grey); font-size:0.55rem; padding-top:0.2rem; }
+  .prob{
+    flex-shrink:0;
+    font-size:0.9rem;
+    font-weight:800;
+    color:var(--lime);
+    min-width:2.6rem;
+    text-align:right;
+  }
+  li.pick:not(.top) .prob{ color:var(--ink); opacity:0.85; }
 
-  @keyframes flicker{ 0%,100%{opacity:0.3;} 50%{opacity:0.7;} }
+  .empty{
+    color:var(--ink-dim);
+    font-size:0.7rem;
+    padding:0.9rem 0.65rem;
+    background:var(--card);
+    border:1px dashed var(--card-border);
+    border-radius:12px;
+    text-align:center;
+  }
+  .note{
+    color:var(--ink-dim);
+    font-size:0.56rem;
+    padding:0.3rem 0.2rem;
+  }
+
+  @keyframes shimmer{ 0%{opacity:0.35;} 50%{opacity:0.7;} 100%{opacity:0.35;} }
   .skeleton{
-    height:0.6rem;
-    background:#1a1a1a;
-    animation:flicker 1.2s ease-in-out infinite;
-    margin:0.35rem 0;
+    height:2.6rem;
+    border-radius:12px;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    animation:shimmer 1.3s ease-in-out infinite;
   }
 </style>
 </head>
 <body>
 <header>
-  <span class="title">CHIRISH AND GLS BTTS PICKS</span>
-  <button class="refresh" id="refresh-btn" onclick="loadPicks()">GENERATE PICKS</button>
+  <div class="brand">
+    <span class="name">Chirish and GLS BTTS Picks</span>
+    <span class="live"><span class="dot"></span>LIVE MODEL</span>
+  </div>
+  <button class="generate" id="generate-btn" onclick="loadPicks()">Generate</button>
 </header>
 
 <div class="banner" id="coverage-banner"></div>
 
 <main>
   <section class="slate">
-    <h2>MIDWEEK</h2>
-    <div class="updated" id="midweek-updated">—</div>
+    <div class="slate-head">
+      <h2>Midweek</h2>
+      <span class="updated" id="midweek-updated">—</span>
+    </div>
     <ol class="picks" id="midweek-list">
-      <li class="empty">TAP GENERATE PICKS</li>
+      <li class="empty">Tap Generate to pull picks</li>
     </ol>
   </section>
 
   <section class="slate">
-    <h2>SATURDAY</h2>
-    <div class="updated" id="saturday-updated">—</div>
+    <div class="slate-head">
+      <h2>Saturday</h2>
+      <span class="updated" id="saturday-updated">—</span>
+    </div>
     <ol class="picks" id="saturday-list">
-      <li class="empty">TAP GENERATE PICKS</li>
+      <li class="empty">Tap Generate to pull picks</li>
     </ol>
   </section>
 </main>
@@ -203,32 +279,46 @@ function leagueShort(key){
   return { championship:'CHA', league_one:'L1', league_two:'L2' }[key] || key;
 }
 
+function renderSkeleton(listEl){
+  listEl.innerHTML = Array(4).fill('<li class="skeleton"></li>').join('');
+}
+
 function renderSlate(listEl, updatedEl, data, loadFailed){
   if(loadFailed){
-    listEl.innerHTML = '<li class="empty">LOAD FAILED — TAP REFRESH</li>';
+    listEl.innerHTML = '<li class="empty">Load failed — tap Generate</li>';
     updatedEl.textContent = '—';
     return;
   }
   if(!data || !data.picks || !data.picks.length){
-    listEl.innerHTML = '<li class="empty">NO FIXTURES IN THIS WINDOW</li>';
+    listEl.innerHTML = '<li class="empty">No fixtures in this window</li>';
     updatedEl.textContent = 'checked ' + fmtGenerated(data ? data.generatedAt : new Date().toISOString());
     return;
   }
 
   updatedEl.textContent = 'updated ' + fmtGenerated(data.generatedAt);
 
-  listEl.innerHTML = data.picks.map((p, i) => {
+  const rows = data.picks.map((p, i) => {
     const pct = Math.round(p.bttsProbability * 100);
     return `
-    <li class="pick">
-      <div class="row1">
-        <span class="rank">${i+1}</span>
-        <span class="teams">${p.home} v ${p.away}</span>
-        <span class="prob">${pct}%</span>
-      </div>
-      <div class="row2"><span class="lg">${leagueShort(p.league)}</span> ${fmtKickoff(p.kickoff)}</div>
+    <li class="pick ${i === 0 ? 'top' : ''}">
+      <span class="rank">${i+1}</span>
+      <span class="fixture">
+        <div class="teams">${p.home} v ${p.away}</div>
+        <div class="meta">
+          <span class="tag ${p.league}">${leagueShort(p.league)}</span>
+          <span>${fmtKickoff(p.kickoff)}</span>
+        </div>
+      </span>
+      <span class="prob">${pct}%</span>
     </li>`;
   }).join('');
+
+  const skipped = (data.unmatchedFixtures || []).length;
+  const note = skipped
+    ? `<li class="note">${skipped} fixture(s) skipped — name mismatch between sources</li>`
+    : '';
+
+  listEl.innerHTML = rows + note;
 }
 
 function renderCoverageBanner(results){
@@ -242,16 +332,18 @@ function renderCoverageBanner(results){
   const banner = document.getElementById('coverage-banner');
   if (uniqueLeagues.length) {
     banner.style.display = 'block';
-    banner.textContent = `${uniqueLeagues.map(leagueShort).join('/')} NOT PUBLISHED YET — CHAMPIONSHIP ONLY`;
+    banner.textContent = `${uniqueLeagues.map(leagueLabel).join(' and ')} unavailable this run`;
   } else {
     banner.style.display = 'none';
   }
 }
 
 function loadPicks(){
-  const btn = document.getElementById('refresh-btn');
+  const btn = document.getElementById('generate-btn');
   btn.disabled = true;
-  btn.textContent = '...';
+  btn.textContent = '···';
+  renderSkeleton(document.getElementById('midweek-list'));
+  renderSkeleton(document.getElementById('saturday-list'));
 
   Promise.allSettled([
     fetch('/api/picks?slate=midweek').then(r => r.json()),
@@ -272,11 +364,9 @@ function loadPicks(){
     renderCoverageBanner([midweek, saturday]);
   }).finally(() => {
     btn.disabled = false;
-    btn.textContent = 'GENERATE PICKS';
+    btn.textContent = 'Generate';
   });
 }
-
-// picks are generated on demand — tap the button, nothing loads automatically
 </script>
 </body>
 </html>
