@@ -1,13 +1,12 @@
-const { LEAGUES, getLeagueStats } = require("./_lib/bundledStats");
-const { getLeagueMatches } = require("./_lib/fixtures");
-const { buildResolver } = require("./_lib/teamMatch");
-const { bttsProbability } = require("./_lib/model");
+const { getPredictions } = require("./_lib/bzzoiro");
 
 // GET /api/picks?slate=midweek|saturday
-// Stats (with real xG) come from a bundled data snapshot (see
-// /data/stats.json.gz — refresh by re-generating from a fresh
-// download). Fixtures: Championship from openfootball; League
-// One/Two from bzzoiro (see _lib/fixtures.js for why they're split).
+// Fully live — no bundled snapshot, no cron, no manual refresh.
+// Uses bzzoiro's own ML prediction per fixture (their BTTS market),
+// which is built on their internal xG model, rather than computing
+// our own from raw stats.
+
+const LEAGUES = ["championship", "league_one", "league_two"];
 
 function nextWeekday(from, targetDay) {
   const d = new Date(from);
@@ -31,52 +30,46 @@ function windowForSlate(slate) {
   return { from: tue, to: thu };
 }
 
+function looksFinished(status) {
+  return /final|finish|ended|ft\b|full.?time/i.test(status || "");
+}
+
 module.exports = async (req, res) => {
   try {
     const slate = req.query.slate === "saturday" ? "saturday" : "midweek";
     const { from, to } = windowForSlate(slate);
 
     const candidates = [];
-    const unmatched = [];
     const leagueErrors = [];
 
-    for (const leagueKey of Object.keys(LEAGUES)) {
-      let statsByName, matches;
+    for (const leagueKey of LEAGUES) {
+      let predictions;
       try {
-        [statsByName, matches] = await Promise.all([
-          getLeagueStats(leagueKey),
-          getLeagueMatches(leagueKey, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10)),
-        ]);
+        predictions = await getPredictions(leagueKey);
       } catch (err) {
         leagueErrors.push({ league: leagueKey, error: err.message });
-        continue; // one league's failure shouldn't block the others
+        continue;
       }
-      const resolve = buildResolver(statsByName);
 
-      for (const m of matches) {
-        if (!m.date) continue;
-        const kickoff = new Date(`${m.date}T15:00:00Z`);
+      for (const p of predictions) {
+        const event = p.event || {};
+        if (!event.event_date) continue;
+        const kickoff = new Date(event.event_date);
         if (kickoff < from || kickoff > to) continue;
-        if (m.played) continue; // already played
+        if (looksFinished(event.status)) continue;
 
-        const homeStats = resolve(m.team1);
-        const awayStats = resolve(m.team2);
-        if (!homeStats || !awayStats) {
-          unmatched.push({ league: leagueKey, home: m.team1, away: m.team2 });
-          continue;
-        }
-
-        const { bttsProbability: prob, homeExpectedGoals, awayExpectedGoals } =
-          bttsProbability(homeStats, awayStats);
+        const btts = p.markets && p.markets.btts;
+        const xg = p.markets && p.markets.expected_goals;
+        if (!btts || typeof btts.prob_yes !== "number") continue;
 
         candidates.push({
           league: leagueKey,
           kickoff: kickoff.toISOString(),
-          home: m.team1,
-          away: m.team2,
-          bttsProbability: Number(prob.toFixed(3)),
-          homeExpectedGoals,
-          awayExpectedGoals,
+          home: event.home_team,
+          away: event.away_team,
+          bttsProbability: Number((btts.prob_yes / 100).toFixed(3)),
+          homeExpectedGoals: xg ? xg.home : null,
+          awayExpectedGoals: xg ? xg.away : null,
         });
       }
     }
@@ -85,12 +78,11 @@ module.exports = async (req, res) => {
 
     res.status(200).json({
       slate,
-      leaguesCovered: Object.keys(LEAGUES),
+      leaguesCovered: LEAGUES,
       window: { from: from.toISOString(), to: to.toISOString() },
       generatedAt: new Date().toISOString(),
       picks: candidates.slice(0, 6),
-      unmatchedFixtures: unmatched, // fixtures skipped due to a name-matching miss
-      leagueErrors, // leagues that failed to load entirely — everything else still returned
+      leagueErrors,
     });
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message });
