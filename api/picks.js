@@ -1,13 +1,13 @@
 const { LEAGUES, getLeagueStats } = require("./_lib/bundledStats");
-const { getLeagueMatches } = require("./_lib/openfootball");
+const { getLeagueMatches } = require("./_lib/fixtures");
 const { buildResolver } = require("./_lib/teamMatch");
 const { bttsProbability } = require("./_lib/model");
 
 // GET /api/picks?slate=midweek|saturday
 // Stats (with real xG) come from a bundled data snapshot (see
-// /data/*.json — refresh by re-generating from a fresh download);
-// fixtures come from the openfootball/england repo (Football.TXT
-// source), fetched live.
+// /data/stats.json.gz — refresh by re-generating from a fresh
+// download). Fixtures: Championship from openfootball; League
+// One/Two from bzzoiro (see _lib/fixtures.js for why they're split).
 
 function nextWeekday(from, targetDay) {
   const d = new Date(from);
@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
       try {
         [statsByName, matches] = await Promise.all([
           getLeagueStats(leagueKey),
-          getLeagueMatches(leagueKey),
+          getLeagueMatches(leagueKey, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10)),
         ]);
       } catch (err) {
         leagueErrors.push({ league: leagueKey, error: err.message });
