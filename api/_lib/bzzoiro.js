@@ -13,6 +13,7 @@
 const BASE = "https://sports.bzzoiro.com/api/v2";
 
 const LEAGUE_NAMES = {
+  championship: "Championship",
   league_one: "League One",
   league_two: "League Two",
 };
@@ -72,4 +73,14 @@ async function getLeagueMatches(leagueKey, fromISO, toISO) {
   }));
 }
 
-module.exports = { getLeagueMatches };
+// BSD's own ML predictions per fixture — already includes a BTTS
+// probability and expected-goals split, built on their internal xG
+// model. Used instead of our own Poisson calc so picks are live and
+// never a frozen snapshot.
+async function getPredictions(leagueKey) {
+  const leagueId = await findLeagueId(leagueKey);
+  const data = await apiGet("/predictions/", { league_id: leagueId, limit: 200 });
+  return data.results || data.predictions || [];
+}
+
+module.exports = { getLeagueMatches, getPredictions };
