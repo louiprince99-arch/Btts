@@ -93,12 +93,18 @@ module.exports = async (req, res) => {
 
     candidates.sort((a, b) => b.bttsProbability - a.bttsProbability);
 
+    const candidateCountByLeague = {};
+    for (const c of candidates) {
+      candidateCountByLeague[c.league] = (candidateCountByLeague[c.league] || 0) + 1;
+    }
+
     res.status(200).json({
       slate,
       leaguesCovered: LEAGUES,
       window: { from: from.toISOString(), to: to.toISOString() },
       generatedAt: new Date().toISOString(),
       picks: candidates.slice(0, 6),
+      candidateCountByLeague, // total fixtures scored per league, before trimming to top 6
       unmatchedFixtures: unmatched,
       leagueErrors,
     });
