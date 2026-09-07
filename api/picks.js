@@ -1,10 +1,15 @@
-const { getPredictions } = require("./_lib/bzzoiro");
+const { getStandings } = require("./_lib/bzzoiro");
+const { getLeagueMatches } = require("./_lib/fixtures");
+const { buildResolver } = require("./_lib/teamMatch");
+const { bttsProbability } = require("./_lib/model");
 
 // GET /api/picks?slate=midweek|saturday
-// Fully live — no bundled snapshot, no cron, no manual refresh.
-// Uses bzzoiro's own ML prediction per fixture (their BTTS market),
-// which is built on their internal xG model, rather than computing
-// our own from raw stats.
+// Our own Poisson BTTS calc (see _lib/model.js), fed by live season xG
+// stats from bzzoiro's standings endpoint (xgf/xga, season-total —
+// not split by home/away, since that split isn't confirmed available;
+// see _lib/bzzoiro.js). Fixtures: Championship from openfootball,
+// League One/Two from bzzoiro (see _lib/fixtures.js). Nothing bundled,
+// nothing frozen — every call hits both APIs fresh.
 
 const LEAGUES = ["championship", "league_one", "league_two"];
 
@@ -30,46 +35,58 @@ function windowForSlate(slate) {
   return { from: tue, to: thu };
 }
 
-function looksFinished(status) {
-  return /final|finish|ended|ft\b|full.?time/i.test(status || "");
-}
-
 module.exports = async (req, res) => {
   try {
     const slate = req.query.slate === "saturday" ? "saturday" : "midweek";
     const { from, to } = windowForSlate(slate);
 
     const candidates = [];
+    const unmatched = [];
     const leagueErrors = [];
 
     for (const leagueKey of LEAGUES) {
-      let predictions;
+      let statsByTeamId, matches;
       try {
-        predictions = await getPredictions(leagueKey);
+        [statsByTeamId, matches] = await Promise.all([
+          getStandings(leagueKey),
+          getLeagueMatches(leagueKey, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10)),
+        ]);
       } catch (err) {
         leagueErrors.push({ league: leagueKey, error: err.message });
         continue;
       }
 
-      for (const p of predictions) {
-        const event = p.event || {};
-        if (!event.event_date) continue;
-        const kickoff = new Date(event.event_date);
-        if (kickoff < from || kickoff > to) continue;
-        if (looksFinished(event.status)) continue;
+      // Fallback name-based resolver, for fixtures sources (openfootball)
+      // that don't carry bzzoiro's team ids.
+      const statsByName = {};
+      for (const s of Object.values(statsByTeamId)) statsByName[s.name] = s;
+      const resolveByName = buildResolver(statsByName);
 
-        const btts = p.markets && p.markets.btts;
-        const xg = p.markets && p.markets.expected_goals;
-        if (!btts || typeof btts.prob_yes !== "number") continue;
+      for (const m of matches) {
+        if (!m.date) continue;
+        const kickoff = new Date(`${m.date}T15:00:00Z`);
+        if (kickoff < from || kickoff > to) continue;
+        if (m.played) continue;
+
+        const homeStats = (m.team1Id && statsByTeamId[m.team1Id]) || resolveByName(m.team1);
+        const awayStats = (m.team2Id && statsByTeamId[m.team2Id]) || resolveByName(m.team2);
+
+        if (!homeStats || !awayStats) {
+          unmatched.push({ league: leagueKey, home: m.team1, away: m.team2 });
+          continue;
+        }
+
+        const { bttsProbability: prob, homeExpectedGoals, awayExpectedGoals } =
+          bttsProbability(homeStats, awayStats);
 
         candidates.push({
           league: leagueKey,
           kickoff: kickoff.toISOString(),
-          home: event.home_team,
-          away: event.away_team,
-          bttsProbability: Number((btts.prob_yes / 100).toFixed(3)),
-          homeExpectedGoals: xg ? xg.home : null,
-          awayExpectedGoals: xg ? xg.away : null,
+          home: m.team1,
+          away: m.team2,
+          bttsProbability: Number(prob.toFixed(3)),
+          homeExpectedGoals,
+          awayExpectedGoals,
         });
       }
     }
@@ -82,6 +99,7 @@ module.exports = async (req, res) => {
       window: { from: from.toISOString(), to: to.toISOString() },
       generatedAt: new Date().toISOString(),
       picks: candidates.slice(0, 6),
+      unmatchedFixtures: unmatched,
       leagueErrors,
     });
   } catch (err) {
