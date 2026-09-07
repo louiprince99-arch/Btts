@@ -3,67 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Chirish and Luigi's BTTS Picks</title>
+<title>Chirish and GLS BTTS Picks</title>
 <style>
   :root{
-    --pitch:#0e1f16;
-    --pitch-line:#172c1f;
-    --card:#1c3626;
-    --chalk:#eef2ea;
-    --chalk-dim:#8ea290;
-    --gold:#d4a537;
-    --amber-dim:rgba(212,165,55,0.18);
-    --teal:#3d8f8a;
-    --slate-blue:#6b7fb0;
+    --black:#000;
+    --tt-white:#f2f2f2;
+    --tt-yellow:#f4c927;
+    --tt-green:#2fd15c;
+    --tt-cyan:#3ecbe0;
+    --tt-red:#e0473e;
+    --tt-grey:#7a7a7a;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
     margin:0;
-    background:var(--pitch);
-    color:var(--chalk);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-    padding:0.6rem 0.6rem calc(0.6rem + env(safe-area-inset-bottom));
+    background:var(--black);
+    color:var(--tt-white);
+    font-family:ui-monospace,"SF Mono","Courier New",monospace;
+    padding:0.5rem;
     display:flex;
     flex-direction:column;
     height:100vh;
+    overflow:hidden;
   }
+
   header{
+    background:var(--tt-yellow);
+    color:var(--black);
     display:flex;
     justify-content:space-between;
     align-items:center;
-    gap:0.5rem;
-    margin-bottom:0.5rem;
+    padding:0.35rem 0.6rem;
     flex-shrink:0;
-  }
-  h1{
-    font-size:1.05rem;
     font-weight:700;
-    margin:0;
-    letter-spacing:-0.01em;
+  }
+  header .title{
+    font-size:0.7rem;
+    letter-spacing:0.02em;
+    flex:1;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  header .page-num{
+    font-size:0.7rem;
+    font-weight:400;
+    opacity:0.75;
   }
   button.refresh{
-    background:var(--card);
-    color:var(--chalk);
-    border:1px solid rgba(255,255,255,0.1);
-    border-radius:6px;
-    padding:0.3rem 0.6rem;
-    font-size:0.72rem;
-    font-weight:600;
+    background:var(--black);
+    color:var(--tt-yellow);
+    border:none;
+    padding:0.25rem 0.5rem;
+    font-family:inherit;
+    font-size:0.68rem;
+    font-weight:700;
     cursor:pointer;
   }
   button.refresh:disabled{ opacity:0.5; }
 
   .banner{
-    background:var(--amber-dim);
-    border:1px solid rgba(212,165,55,0.35);
-    color:var(--chalk);
-    font-size:0.68rem;
-    line-height:1.3;
-    padding:0.4rem 0.6rem;
-    border-radius:6px;
+    background:var(--tt-red);
+    color:var(--black);
+    font-size:0.65rem;
+    font-weight:700;
+    padding:0.3rem 0.6rem;
     display:none;
-    margin-bottom:0.5rem;
     flex-shrink:0;
   }
 
@@ -72,29 +79,30 @@
     min-height:0;
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:0.5rem;
+    gap:0;
   }
   section.slate{
-    background:var(--pitch-line);
-    border-radius:8px;
-    padding:0.55rem 0.5rem;
     display:flex;
     flex-direction:column;
     min-height:0;
-    overflow:hidden;
+    padding:0.4rem 0.5rem;
+  }
+  section.slate:first-child{
+    border-right:1px dashed #333;
   }
   section.slate h2{
-    font-size:0.62rem;
-    text-transform:uppercase;
+    color:var(--tt-green);
+    font-size:0.72rem;
+    font-weight:700;
     letter-spacing:0.04em;
-    color:var(--chalk-dim);
     margin:0;
   }
   section.slate .updated{
+    color:var(--tt-grey);
     font-size:0.6rem;
-    color:var(--chalk-dim);
-    margin-bottom:0.35rem;
+    margin-bottom:0.3rem;
   }
+
   ol.picks{
     list-style:none;
     margin:0;
@@ -106,93 +114,81 @@
     min-height:0;
   }
   ol.picks li.pick{
-    padding:0.28rem 0;
-    border-top:1px solid rgba(255,255,255,0.06);
-    line-height:1.15;
+    line-height:1.2;
+    border-top:1px solid #1a1a1a;
+    padding:0.22rem 0;
   }
-  ol.picks li.pick:first-child{border-top:none;}
-  .pick-top{
+  ol.picks li.pick:first-child{ border-top:none; }
+
+  .row1{
     display:flex;
     align-items:baseline;
-    gap:0.35rem;
+    gap:0.3rem;
   }
   .rank{
-    color:var(--gold);
+    color:var(--tt-yellow);
     font-weight:700;
-    font-size:0.7rem;
-    width:0.9rem;
+    font-size:0.68rem;
+    width:0.85rem;
     flex-shrink:0;
   }
-  .fixture{flex:1; min-width:0;}
   .teams{
-    font-weight:600;
-    font-size:0.72rem;
+    flex:1;
+    min-width:0;
+    color:var(--tt-white);
+    font-size:0.68rem;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .meta{
-    color:var(--chalk-dim);
-    font-size:0.6rem;
-    display:flex;
-    align-items:center;
-    gap:0.3rem;
-    white-space:nowrap;
-    overflow:hidden;
-  }
-  .badge{
-    display:inline-block;
-    font-size:0.55rem;
-    font-weight:700;
-    padding:0 0.25rem;
-    border-radius:3px;
-    flex-shrink:0;
-  }
-  .badge.championship{ background:rgba(212,165,55,0.2); color:var(--gold); }
-  .badge.league_one{ background:rgba(61,143,138,0.25); color:var(--teal); }
-  .badge.league_two{ background:rgba(107,127,176,0.25); color:var(--slate-blue); }
   .prob{
+    color:var(--tt-yellow);
     font-weight:700;
-    color:var(--gold);
-    font-size:0.75rem;
-    white-space:nowrap;
+    font-size:0.72rem;
     flex-shrink:0;
   }
-  .empty{color:var(--chalk-dim);font-size:0.72rem;padding:0.5rem 0;}
-  .note{color:var(--chalk-dim);font-size:0.58rem;margin-top:0.2rem;}
+  .row2{
+    color:var(--tt-cyan);
+    font-size:0.58rem;
+    padding-left:1.15rem;
+  }
+  .row2 .lg{ color:var(--tt-grey); }
 
-  @keyframes pulse{ 0%,100%{opacity:0.4;} 50%{opacity:0.8;} }
+  .empty{ color:var(--tt-grey); font-size:0.68rem; padding:0.4rem 0; }
+  .note{ color:var(--tt-grey); font-size:0.55rem; padding-top:0.2rem; }
+
+  @keyframes flicker{ 0%,100%{opacity:0.3;} 50%{opacity:0.7;} }
   .skeleton{
-    height:0.7rem;
-    background:rgba(255,255,255,0.08);
-    border-radius:3px;
-    animation:pulse 1.4s ease-in-out infinite;
-    margin:0.4rem 0;
+    height:0.6rem;
+    background:#1a1a1a;
+    animation:flicker 1.2s ease-in-out infinite;
+    margin:0.35rem 0;
   }
 </style>
 </head>
 <body>
 <header>
-  <h1>BTTS Picks</h1>
-  <button class="refresh" id="refresh-btn" onclick="loadPicks()">Refresh</button>
+  <span class="title">CHIRISH AND GLS BTTS PICKS</span>
+  <span class="page-num">p690</span>
+  <button class="refresh" id="refresh-btn" onclick="loadPicks()">GENERATE PICKS</button>
 </header>
 
 <div class="banner" id="coverage-banner"></div>
 
 <main>
   <section class="slate">
-    <h2>Midweek</h2>
+    <h2>MIDWEEK</h2>
     <div class="updated" id="midweek-updated">—</div>
     <ol class="picks" id="midweek-list">
-      <li class="skeleton"></li><li class="skeleton"></li><li class="skeleton"></li>
+      <li class="empty">TAP GENERATE PICKS</li>
     </ol>
   </section>
 
   <section class="slate">
-    <h2>Saturday</h2>
+    <h2>SATURDAY</h2>
     <div class="updated" id="saturday-updated">—</div>
     <ol class="picks" id="saturday-list">
-      <li class="skeleton"></li><li class="skeleton"></li><li class="skeleton"></li>
+      <li class="empty">TAP GENERATE PICKS</li>
     </ol>
   </section>
 </main>
@@ -215,33 +211,28 @@ function leagueShort(key){
 
 function renderSlate(listEl, updatedEl, data, loadFailed){
   if(loadFailed){
-    listEl.innerHTML = '<li class="empty">Failed to load — tap Refresh.</li>';
+    listEl.innerHTML = '<li class="empty">LOAD FAILED — TAP REFRESH</li>';
     updatedEl.textContent = '—';
     return;
   }
   if(!data || !data.picks || !data.picks.length){
-    listEl.innerHTML = '<li class="empty">No fixtures in this window.</li>';
-    updatedEl.textContent = 'Checked ' + fmtGenerated(data ? data.generatedAt : new Date().toISOString());
+    listEl.innerHTML = '<li class="empty">NO FIXTURES IN THIS WINDOW</li>';
+    updatedEl.textContent = 'checked ' + fmtGenerated(data ? data.generatedAt : new Date().toISOString());
     return;
   }
 
-  updatedEl.textContent = 'Updated ' + fmtGenerated(data.generatedAt);
+  updatedEl.textContent = 'updated ' + fmtGenerated(data.generatedAt);
 
   listEl.innerHTML = data.picks.map((p, i) => {
     const pct = Math.round(p.bttsProbability * 100);
     return `
     <li class="pick">
-      <div class="pick-top">
+      <div class="row1">
         <span class="rank">${i+1}</span>
-        <span class="fixture">
-          <div class="teams">${p.home} v ${p.away}</div>
-          <div class="meta">
-            <span class="badge ${p.league}">${leagueShort(p.league)}</span>
-            <span>${fmtKickoff(p.kickoff)}</span>
-          </div>
-        </span>
+        <span class="teams">${p.home} v ${p.away}</span>
         <span class="prob">${pct}%</span>
       </div>
+      <div class="row2"><span class="lg">${leagueShort(p.league)}</span> ${fmtKickoff(p.kickoff)}</div>
     </li>`;
   }).join('');
 }
@@ -257,7 +248,7 @@ function renderCoverageBanner(results){
   const banner = document.getElementById('coverage-banner');
   if (uniqueLeagues.length) {
     banner.style.display = 'block';
-    banner.textContent = `${uniqueLeagues.map(leagueLabel).join(' and ')} not available yet this season.`;
+    banner.textContent = `${uniqueLeagues.map(leagueShort).join('/')} NOT PUBLISHED YET — CHAMPIONSHIP ONLY`;
   } else {
     banner.style.display = 'none';
   }
@@ -266,7 +257,7 @@ function renderCoverageBanner(results){
 function loadPicks(){
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
-  btn.textContent = '…';
+  btn.textContent = '...';
 
   Promise.allSettled([
     fetch('/api/picks?slate=midweek').then(r => r.json()),
@@ -287,11 +278,11 @@ function loadPicks(){
     renderCoverageBanner([midweek, saturday]);
   }).finally(() => {
     btn.disabled = false;
-    btn.textContent = 'Refresh';
+    btn.textContent = 'GENERATE PICKS';
   });
 }
 
-loadPicks();
+// picks are generated on demand — tap the button, nothing loads automatically
 </script>
 </body>
 </html>
