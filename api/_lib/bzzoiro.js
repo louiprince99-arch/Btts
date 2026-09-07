@@ -69,8 +69,37 @@ async function getLeagueMatches(leagueKey, fromISO, toISO) {
     date: (e.event_date || "").slice(0, 10),
     team1: e.home_team,
     team2: e.away_team,
+    team1Id: e.home_team_id,
+    team2Id: e.away_team_id,
     played: looksFinished(e.status),
   }));
+}
+
+// Season-total standings, including xgf (xG for) / xga (xG against) —
+// confirmed fields, but this is a season-total table, not split by
+// home/away, so the per-game rate derived from it is applied the same
+// whether the team is home or away.
+async function getStandings(leagueKey) {
+  const leagueId = await findLeagueId(leagueKey);
+  const data = await apiGet(`/leagues/${leagueId}/standings/`);
+  const rows = data.standings || [];
+
+  const stats = {};
+  for (const row of rows) {
+    if (!row.played) continue;
+    const xgFor = typeof row.xgf === "number" ? row.xgf / row.played : null;
+    const xgAgainst = typeof row.xga === "number" ? row.xga / row.played : null;
+    if (xgFor === null || xgAgainst === null) continue; // no xG data for this team yet
+    stats[row.team_id] = {
+      name: row.team_name,
+      teamId: row.team_id,
+      goalsForHome: xgFor,
+      goalsForAway: xgFor,
+      goalsAgainstHome: xgAgainst,
+      goalsAgainstAway: xgAgainst,
+    };
+  }
+  return stats;
 }
 
 // BSD's own ML predictions per fixture — already includes a BTTS
@@ -83,4 +112,4 @@ async function getPredictions(leagueKey) {
   return data.results || data.predictions || [];
 }
 
-module.exports = { getLeagueMatches, getPredictions };
+module.exports = { getLeagueMatches, getPredictions, getStandings };
