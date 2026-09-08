@@ -134,7 +134,10 @@ async function getPredictions(leagueKey) {
 // Every finished match this season for a league, as team-ID pairs only
 // (used to work out who each team has actually played, for a
 // strength-of-schedule adjustment — see _lib/scheduleAdjust.js).
-async function getPlayedMatchups(leagueKey) {
+// Every finished match this season for a league — full enough detail
+// (date, scores, team ids) to support both the strength-of-schedule
+// adjustment and the recent-form / historical-BTTS-rate calcs.
+async function getPlayedMatches(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
   const now = new Date();
   const seasonStartYear = now.getUTCMonth() + 1 >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
@@ -145,7 +148,15 @@ async function getPlayedMatchups(leagueKey) {
     { league_id: leagueId, date_from: seasonStart, date_to: today, limit: 200 },
     "events"
   );
-  return events.map((e) => ({ homeTeamId: e.home_team_id, awayTeamId: e.away_team_id }));
+  return events
+    .filter((e) => typeof e.home_score === "number" && typeof e.away_score === "number")
+    .map((e) => ({
+      homeTeamId: e.home_team_id,
+      awayTeamId: e.away_team_id,
+      date: e.event_date,
+      homeScore: e.home_score,
+      awayScore: e.away_score,
+    }));
 }
 
-module.exports = { getLeagueMatches, getPredictions, getStandings, getPlayedMatchups };
+module.exports = { getLeagueMatches, getPredictions, getStandings, getPlayedMatches };
