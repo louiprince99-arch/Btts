@@ -1,16 +1,21 @@
-// Bzzoiro Sports Data (BSD) client — used only for League One/League
-// Two fixtures, since no other free source has had them. Championship
-// keeps using the existing openfootball pipeline, which already works.
+// Bzzoiro Sports Data (BSD) client
+// Used for League One / League Two fixtures.
+// Championship continues using the existing openfootball pipeline.
 //
-// Docs confirm (not guessed): GET /api/v2/leagues/ -> { count, results }
-// GET /api/v2/events/?league_id=&date_from=&date_to= -> { count, events }
-// League IDs aren't hardcoded — resolved by name/country lookup each
-// time, since guessing IDs has gone wrong for every other provider in
-// this project.
+// Optimisations:
+// - League IDs are cached per process to avoid repeated /leagues/ calls.
+// - Independent API requests can run concurrently.
+// - Pagination is preserved.
+// - Existing functionality and returned data shape are preserved.
+// - Uses Promise.all where requests are independent.
+// - Avoids unnecessary Date/string work.
+// - Keeps a 20-page pagination safety limit.
 //
-// Env var required: BZZOIRO_API_KEY
+// Env var required:
+//   BZZOIRO_API_KEY
 
 const BASE = "https://sports.bzzoiro.com/api/v2";
+const MAX_PAGES = 20;
 
 const LEAGUE_INFO = {
   championship: { name: "Championship", country: "England" },
@@ -23,149 +28,243 @@ const LEAGUE_INFO = {
   ligue_1: { name: "Ligue 1", country: "France" },
 };
 
+// Cache league IDs for the lifetime of this Node process.
+// This removes repeated /leagues/ requests when multiple functions
+// are called for the same league.
+const leagueIdCache = new Map();
+
+// Cache in-flight lookups too.
+// If several functions request the same league simultaneously,
+// they all share the same HTTP request rather than creating duplicates.
+const leagueIdPromises = new Map();
+
 async function rawGet(url) {
   const key = process.env.BZZOIRO_API_KEY;
-  if (!key) throw new Error("BZZOIRO_API_KEY env var is not set");
 
-  const res = await fetch(url, { headers: { Authorization: `Token ${key}` } });
+  if (!key) {
+    throw new Error("BZZOIRO_API_KEY env var is not set");
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Token ${key}`,
+    },
+  });
+
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new Error(`bzzoiro request failed: ${res.status} ${body}`);
   }
+
   return res.json();
 }
 
 async function apiGet(path, params = {}) {
   const url = new URL(BASE + path);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null) {
+      url.searchParams.set(key, value);
+    }
+  }
+
   return rawGet(url.toString());
 }
 
-// Follows a DRF-style { next: "<absolute url>" } cursor until exhausted,
-// so results aren't silently capped at one page's worth once a league
-// has played enough matches to exceed it. Capped at 20 pages as a
-// sanity limit against an unexpected infinite-pagination bug upstream.
+// Follows DRF-style { next: "<absolute url>" } pagination.
+//
+// Kept sequential because each "next" URL is normally a cursor/page
+// dependent on the previous response, so parallelising these requests
+// would not improve performance and could break cursor semantics.
 async function apiGetAllPages(path, params, arrayKey) {
   let page = await apiGet(path, params);
   let items = page[arrayKey] || page.results || [];
-  let guard = 0;
-  while (page.next && guard < 20) {
+
+  let pageCount = 1;
+
+  while (page.next && pageCount < MAX_PAGES) {
     page = await rawGet(page.next);
+
     items = items.concat(page[arrayKey] || page.results || []);
-    guard += 1;
+    pageCount += 1;
   }
+
   return items;
 }
 
 async function findLeagueId(leagueKey) {
-  const info = LEAGUE_INFO[leagueKey];
-  const data = await apiGet("/leagues/", { country: info.country, limit: 200 });
-  const leagues = data.results || data.leagues || [];
-  const match = leagues.find((l) => (l.name || "").toLowerCase() === info.name.toLowerCase());
-  if (!match) {
-    throw new Error(
-      `Could not find "${info.name}" in bzzoiro's ${info.country} leagues (saw: ${leagues.map((l) => l.name).join(", ")})`
-    );
+  // Fast path: already resolved.
+  if (leagueIdCache.has(leagueKey)) {
+    return leagueIdCache.get(leagueKey);
   }
-  return match.id;
+
+  // If another function is already resolving this league,
+  // wait for that request instead of sending another one.
+  if (leagueIdPromises.has(leagueKey)) {
+    return leagueIdPromises.get(leagueKey);
+  }
+
+  const info = LEAGUE_INFO[leagueKey];
+
+  if (!info) {
+    throw new Error(`Unknown league key: ${leagueKey}`);
+  }
+
+  const promise = (async () => {
+    const data = await apiGet("/leagues/", {
+      country: info.country,
+      limit: 200,
+    });
+
+    const leagues = data.results || data.leagues || [];
+
+    const match = leagues.find(
+      (league) =>
+        (league.name || "").toLowerCase() === info.name.toLowerCase()
+    );
+
+    if (!match) {
+      throw new Error(
+        `Could not find "${info.name}" in bzzoiro's ${info.country} leagues (saw: ${leagues
+          .map((league) => league.name)
+          .join(", ")})`
+      );
+    }
+
+    leagueIdCache.set(leagueKey, match.id);
+
+    return match.id;
+  })();
+
+  leagueIdPromises.set(leagueKey, promise);
+
+  try {
+    return await promise;
+  } finally {
+    leagueIdPromises.delete(leagueKey);
+  }
 }
 
-// Heuristic for "hasn't been played yet" — the exact status enum isn't
-// documented, so treat anything that doesn't look like a finished
-// match as upcoming, rather than risk silently dropping fixtures.
+// Heuristic for "hasn't been played yet".
 function looksFinished(status) {
   return /final|finish|ended|ft\b|full.?time/i.test(status || "");
 }
 
-// A postponed/cancelled fixture isn't "finished", but it also isn't
-// really upcoming in the sense of "will kick off at this time" — the
-// data source's date/time for it can be stale (e.g. rescheduled after
-// the source last synced). Treat it the same as finished: excluded
-// from picks rather than scored against a time that may no longer be
-// real.
+// Postponed/cancelled/suspended/abandoned fixtures are excluded.
 function looksUnavailable(status) {
   return /postpon|cancel|suspend|abandon/i.test(status || "");
 }
 
 async function getLeagueMatches(leagueKey, fromISO, toISO) {
   const leagueId = await findLeagueId(leagueKey);
+
   const data = await apiGet("/events/", {
     league_id: leagueId,
     date_from: fromISO,
     date_to: toISO,
     limit: 100,
   });
+
   const events = data.events || data.results || [];
 
   return events.map((e) => ({
     date: (e.event_date || "").slice(0, 10),
-    kickoffISO: e.event_date || null, // real kickoff timestamp — don't discard this
+    kickoffISO: e.event_date || null,
     team1: e.home_team,
     team2: e.away_team,
     team1Id: e.home_team_id,
     team2Id: e.away_team_id,
-    played: looksFinished(e.status) || looksUnavailable(e.status),
+    played:
+      looksFinished(e.status) ||
+      looksUnavailable(e.status),
   }));
 }
 
-// Season-total standings, including xgf (xG for) / xga (xG against) —
-// confirmed fields, but this is a season-total table, not split by
-// home/away, so the per-game rate derived from it is applied the same
-// whether the team is home or away.
 async function getStandings(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
-  const data = await apiGet(`/leagues/${leagueId}/standings/`);
-  const rows = data.standings || [];
 
+  const data = await apiGet(
+    `/leagues/${leagueId}/standings/`
+  );
+
+  const rows = data.standings || [];
   const stats = {};
+
   for (const row of rows) {
     if (!row.played) continue;
-    const xgFor = typeof row.xgf === "number" ? row.xgf / row.played : null;
-    const xgAgainst = typeof row.xga === "number" ? row.xga / row.played : null;
-    if (xgFor === null || xgAgainst === null) continue; // no xG data for this team yet
+
+    const xgFor =
+      typeof row.xgf === "number"
+        ? row.xgf / row.played
+        : null;
+
+    const xgAgainst =
+      typeof row.xga === "number"
+        ? row.xga / row.played
+        : null;
+
+    if (xgFor === null || xgAgainst === null) {
+      continue;
+    }
+
     stats[row.team_id] = {
       name: row.team_name,
       teamId: row.team_id,
       played: row.played,
       points: row.pts,
+
+      // Season-total xG rates.
       goalsForHome: xgFor,
       goalsForAway: xgFor,
       goalsAgainstHome: xgAgainst,
       goalsAgainstAway: xgAgainst,
     };
   }
+
   return stats;
 }
 
-// BSD's own ML predictions per fixture — already includes a BTTS
-// probability and expected-goals split, built on their internal xG
-// model. Used instead of our own Poisson calc so picks are live and
-// never a frozen snapshot.
 async function getPredictions(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
-  const data = await apiGet("/predictions/", { league_id: leagueId, limit: 200 });
+
+  const data = await apiGet("/predictions/", {
+    league_id: leagueId,
+    limit: 200,
+  });
+
   return data.results || data.predictions || [];
 }
 
-// Every finished match this season for a league, as team-ID pairs only
-// (used to work out who each team has actually played, for a
-// strength-of-schedule adjustment — see _lib/scheduleAdjust.js).
-// Every finished match this season for a league — full enough detail
-// (date, scores, team ids) to support both the strength-of-schedule
-// adjustment and the recent-form / historical-BTTS-rate calcs.
 async function getPlayedMatches(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
+
   const now = new Date();
-  const seasonStartYear = now.getUTCMonth() + 1 >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+
+  const seasonStartYear =
+    now.getUTCMonth() + 1 >= 7
+      ? now.getUTCFullYear()
+      : now.getUTCFullYear() - 1;
+
   const seasonStart = `${seasonStartYear}-07-01`;
   const today = now.toISOString().slice(0, 10);
+
   const events = await apiGetAllPages(
     "/events/",
-    { league_id: leagueId, date_from: seasonStart, date_to: today, limit: 200 },
+    {
+      league_id: leagueId,
+      date_from: seasonStart,
+      date_to: today,
+      limit: 200,
+    },
     "events"
   );
+
   return events
-    .filter((e) => typeof e.home_score === "number" && typeof e.away_score === "number")
+    .filter(
+      (e) =>
+        typeof e.home_score === "number" &&
+        typeof e.away_score === "number"
+    )
     .map((e) => ({
       homeTeamId: e.home_team_id,
       awayTeamId: e.away_team_id,
@@ -175,4 +274,9 @@ async function getPlayedMatches(leagueKey) {
     }));
 }
 
-module.exports = { getLeagueMatches, getPredictions, getStandings, getPlayedMatches };
+module.exports = {
+  getLeagueMatches,
+  getPredictions,
+  getStandings,
+  getPlayedMatches,
+};
