@@ -93,6 +93,8 @@ async function getStandings(leagueKey) {
     stats[row.team_id] = {
       name: row.team_name,
       teamId: row.team_id,
+      played: row.played,
+      points: row.pts,
       goalsForHome: xgFor,
       goalsForAway: xgFor,
       goalsAgainstHome: xgAgainst,
@@ -112,4 +114,16 @@ async function getPredictions(leagueKey) {
   return data.results || data.predictions || [];
 }
 
-module.exports = { getLeagueMatches, getPredictions, getStandings };
+// Every finished match this season for a league, as team-ID pairs only
+// (used to work out who each team has actually played, for a
+// strength-of-schedule adjustment — see _lib/scheduleAdjust.js).
+async function getPlayedMatchups(leagueKey) {
+  const leagueId = await findLeagueId(leagueKey);
+  const data = await apiGet("/events/", { league_id: leagueId, limit: 200 });
+  const events = data.events || data.results || [];
+  return events
+    .filter((e) => looksFinished(e.status))
+    .map((e) => ({ homeTeamId: e.home_team_id, awayTeamId: e.away_team_id }));
+}
+
+module.exports = { getLeagueMatches, getPredictions, getStandings, getPlayedMatchups };
