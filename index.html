@@ -126,6 +126,17 @@
     font-size:0.58rem;
     color:var(--ink-dim);
   }
+  .acca-line{
+    font-size:0.68rem;
+    font-weight:700;
+    color:var(--lime);
+    padding:0 0.15rem 0.5rem;
+  }
+  .acca-line .label{
+    color:var(--ink-dim);
+    font-weight:600;
+    margin-right:0.3rem;
+  }
 
   ol.picks{
     list-style:none;
@@ -195,6 +206,9 @@
   .tag.league_one{ background:rgba(79,216,232,0.15); color:var(--cyan); }
   .tag.league_two{ background:rgba(167,139,250,0.15); color:var(--violet); }
 
+  .hist{ font-size:0.55rem; color:var(--ink-dim); }
+  .hist.diverges{ color:var(--amber); font-weight:700; }
+
   .prob{
     flex-shrink:0;
     font-size:0.9rem;
@@ -247,6 +261,7 @@
       <h2>Midweek</h2>
       <span class="updated" id="midweek-updated">—</span>
     </div>
+    <div class="acca-line" id="midweek-acca"></div>
     <ol class="picks" id="midweek-list">
       <li class="empty">Tap Generate to pull picks</li>
     </ol>
@@ -257,6 +272,7 @@
       <h2>Saturday</h2>
       <span class="updated" id="saturday-updated">—</span>
     </div>
+    <div class="acca-line" id="saturday-acca"></div>
     <ol class="picks" id="saturday-list">
       <li class="empty">Tap Generate to pull picks</li>
     </ol>
@@ -283,22 +299,37 @@ function renderSkeleton(listEl){
   listEl.innerHTML = Array(4).fill('<li class="skeleton"></li>').join('');
 }
 
-function renderSlate(listEl, updatedEl, data, loadFailed){
+function renderSlate(listEl, updatedEl, accaEl, data, loadFailed){
   if(loadFailed){
     listEl.innerHTML = '<li class="empty">Load failed — tap Generate</li>';
     updatedEl.textContent = '—';
+    accaEl.textContent = '';
     return;
   }
   if(!data || !data.picks || !data.picks.length){
     listEl.innerHTML = '<li class="empty">No fixtures in this window</li>';
     updatedEl.textContent = 'checked ' + fmtGenerated(data ? data.generatedAt : new Date().toISOString());
+    accaEl.textContent = '';
     return;
   }
 
   updatedEl.textContent = 'updated ' + fmtGenerated(data.generatedAt);
 
+  if (typeof data.accaProbability === 'number') {
+    const accaPct = (data.accaProbability * 100).toFixed(1);
+    accaEl.innerHTML = `<span class="label">Acca odds</span>${accaPct}%`;
+  } else {
+    accaEl.textContent = '';
+  }
+
   const rows = data.picks.map((p, i) => {
     const pct = Math.round(p.bttsProbability * 100);
+    let histHtml = '';
+    if (typeof p.historicalBttsRate === 'number') {
+      const histPct = Math.round(p.historicalBttsRate * 100);
+      const diverges = Math.abs(p.historicalBttsRate - p.bttsProbability) > 0.15;
+      histHtml = `<div class="hist ${diverges ? 'diverges' : ''}">${diverges ? '⚠ ' : ''}history ${histPct}%</div>`;
+    }
     return `
     <li class="pick ${i === 0 ? 'top' : ''}">
       <span class="rank">${i+1}</span>
@@ -308,6 +339,7 @@ function renderSlate(listEl, updatedEl, data, loadFailed){
           <span class="tag ${p.league}">${leagueShort(p.league)}</span>
           <span>${fmtKickoff(p.kickoff)}</span>
         </div>
+        ${histHtml}
       </span>
       <span class="prob">${pct}%</span>
     </li>`;
@@ -352,12 +384,14 @@ function loadPicks(){
     renderSlate(
       document.getElementById('midweek-list'),
       document.getElementById('midweek-updated'),
+      document.getElementById('midweek-acca'),
       midweek.status === 'fulfilled' ? midweek.value : null,
       midweek.status !== 'fulfilled'
     );
     renderSlate(
       document.getElementById('saturday-list'),
       document.getElementById('saturday-updated'),
+      document.getElementById('saturday-acca'),
       saturday.status === 'fulfilled' ? saturday.value : null,
       saturday.status !== 'fulfilled'
     );
