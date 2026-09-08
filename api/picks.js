@@ -45,6 +45,7 @@ module.exports = async (req, res) => {
     const candidates = [];
     const unmatched = [];
     const leagueErrors = [];
+    const debugByLeague = {};
 
     for (const leagueKey of LEAGUES) {
       let statsByTeamId, matches, matchups;
@@ -58,6 +59,13 @@ module.exports = async (req, res) => {
         leagueErrors.push({ league: leagueKey, error: err.message });
         continue;
       }
+
+      debugByLeague[leagueKey] = {
+        teamsInStandings: Object.keys(statsByTeamId).length,
+        matchupsFetched: matchups.length,
+        sampleStandingsTeamIds: Object.keys(statsByTeamId).slice(0, 3),
+        sampleMatchupTeamIds: matchups.slice(0, 3).map((m) => [m.homeTeamId, m.awayTeamId]),
+      };
 
       statsByTeamId = applyScheduleAdjustment(statsByTeamId, matchups);
 
@@ -111,7 +119,8 @@ module.exports = async (req, res) => {
       window: { from: from.toISOString(), to: to.toISOString() },
       generatedAt: new Date().toISOString(),
       picks: candidates.slice(0, 6),
-      candidateCountByLeague, // total fixtures scored per league, before trimming to top 6
+      candidateCountByLeague,
+      debugByLeague, // total fixtures scored per league, before trimming to top 6
       unmatchedFixtures: unmatched,
       leagueErrors,
     });
