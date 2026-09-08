@@ -108,6 +108,7 @@
   }
 
   section.slate{ min-width:0; }
+  .top5-section{ margin-top:0.6rem; }
   .slate-head{
     display:flex;
     justify-content:space-between;
@@ -205,6 +206,11 @@
   .tag.championship{ background:rgba(255,184,77,0.15); color:var(--amber); }
   .tag.league_one{ background:rgba(79,216,232,0.15); color:var(--cyan); }
   .tag.league_two{ background:rgba(167,139,250,0.15); color:var(--violet); }
+  .tag.premier_league{ background:rgba(186,255,61,0.15); color:var(--lime); }
+  .tag.la_liga{ background:rgba(255,138,138,0.15); color:#ff8a8a; }
+  .tag.serie_a{ background:rgba(138,180,255,0.15); color:#8ab4ff; }
+  .tag.bundesliga{ background:rgba(255,214,102,0.15); color:#ffd666; }
+  .tag.ligue_1{ background:rgba(180,255,214,0.15); color:#b4ffd6; }
 
   .hist{ font-size:0.55rem; color:var(--ink-dim); }
   .hist.diverges{ color:var(--amber); font-weight:700; }
@@ -267,6 +273,18 @@
     </ol>
   </section>
 
+<main>
+  <section class="slate">
+    <div class="slate-head">
+      <h2>Midweek</h2>
+      <span class="updated" id="midweek-updated">—</span>
+    </div>
+    <div class="acca-line" id="midweek-acca"></div>
+    <ol class="picks" id="midweek-list">
+      <li class="empty">Tap Generate to pull picks</li>
+    </ol>
+  </section>
+
   <section class="slate">
     <div class="slate-head">
       <h2>Saturday</h2>
@@ -279,6 +297,17 @@
   </section>
 </main>
 
+<section class="slate top5-section">
+  <div class="slate-head">
+    <h2>Top 5 Weekend — Prem / La Liga / Serie A / Bundesliga / Ligue 1</h2>
+    <span class="updated" id="top5-updated">—</span>
+  </div>
+  <div class="acca-line" id="top5-acca"></div>
+  <ol class="picks" id="top5-list">
+    <li class="empty">Tap Generate to pull picks</li>
+  </ol>
+</section>
+
 <script>
 function fmtKickoff(iso){
   const d = new Date(iso);
@@ -289,10 +318,18 @@ function fmtGenerated(iso){
   return d.toLocaleString('en-GB', { timeZone:'Europe/London', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
 }
 function leagueLabel(key){
-  return { championship:'Championship', league_one:'League One', league_two:'League Two' }[key] || key;
+  return {
+    championship:'Championship', league_one:'League One', league_two:'League Two',
+    premier_league:'Premier League', la_liga:'La Liga', serie_a:'Serie A',
+    bundesliga:'Bundesliga', ligue_1:'Ligue 1',
+  }[key] || key;
 }
 function leagueShort(key){
-  return { championship:'CHA', league_one:'L1', league_two:'L2' }[key] || key;
+  return {
+    championship:'CHA', league_one:'L1', league_two:'L2',
+    premier_league:'PL', la_liga:'LIGA', serie_a:'SA',
+    bundesliga:'BL', ligue_1:'L1FR',
+  }[key] || key;
 }
 
 function renderSkeleton(listEl){
@@ -369,11 +406,13 @@ function loadPicks(){
   btn.textContent = '···';
   renderSkeleton(document.getElementById('midweek-list'));
   renderSkeleton(document.getElementById('saturday-list'));
+  renderSkeleton(document.getElementById('top5-list'));
 
   Promise.allSettled([
     fetch('/api/picks?slate=midweek').then(r => r.json()),
     fetch('/api/picks?slate=saturday').then(r => r.json()),
-  ]).then(([midweek, saturday]) => {
+    fetch('/api/picks-top5').then(r => r.json()),
+  ]).then(([midweek, saturday, top5]) => {
     renderSlate(
       document.getElementById('midweek-list'),
       document.getElementById('midweek-updated'),
@@ -388,7 +427,14 @@ function loadPicks(){
       saturday.status === 'fulfilled' ? saturday.value : null,
       saturday.status !== 'fulfilled'
     );
-    renderCoverageBanner([midweek, saturday]);
+    renderSlate(
+      document.getElementById('top5-list'),
+      document.getElementById('top5-updated'),
+      document.getElementById('top5-acca'),
+      top5.status === 'fulfilled' ? top5.value : null,
+      top5.status !== 'fulfilled'
+    );
+    renderCoverageBanner([midweek, saturday, top5]);
   }).finally(() => {
     btn.disabled = false;
     btn.textContent = 'Generate';
