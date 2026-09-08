@@ -77,6 +77,16 @@ function looksFinished(status) {
   return /final|finish|ended|ft\b|full.?time/i.test(status || "");
 }
 
+// A postponed/cancelled fixture isn't "finished", but it also isn't
+// really upcoming in the sense of "will kick off at this time" — the
+// data source's date/time for it can be stale (e.g. rescheduled after
+// the source last synced). Treat it the same as finished: excluded
+// from picks rather than scored against a time that may no longer be
+// real.
+function looksUnavailable(status) {
+  return /postpon|cancel|suspend|abandon/i.test(status || "");
+}
+
 async function getLeagueMatches(leagueKey, fromISO, toISO) {
   const leagueId = await findLeagueId(leagueKey);
   const data = await apiGet("/events/", {
@@ -94,7 +104,7 @@ async function getLeagueMatches(leagueKey, fromISO, toISO) {
     team2: e.away_team,
     team1Id: e.home_team_id,
     team2Id: e.away_team_id,
-    played: looksFinished(e.status),
+    played: looksFinished(e.status) || looksUnavailable(e.status),
   }));
 }
 
