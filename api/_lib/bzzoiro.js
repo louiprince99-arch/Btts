@@ -119,11 +119,12 @@ async function getPredictions(leagueKey) {
 // strength-of-schedule adjustment — see _lib/scheduleAdjust.js).
 async function getPlayedMatchups(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
-  const data = await apiGet("/events/", { league_id: leagueId, limit: 200 });
+  const today = new Date().toISOString().slice(0, 10);
+  const data = await apiGet("/events/", { league_id: leagueId, date_to: today, limit: 200 });
   const events = data.events || data.results || [];
-  return events
-    .filter((e) => looksFinished(e.status))
-    .map((e) => ({ homeTeamId: e.home_team_id, awayTeamId: e.away_team_id }));
+  // date_to already restricts this to past fixtures — no need to also
+  // guess at a "finished" status string on top of that.
+  return events.map((e) => ({ homeTeamId: e.home_team_id, awayTeamId: e.away_team_id }));
 }
 
 module.exports = { getLeagueMatches, getPredictions, getStandings, getPlayedMatchups };
