@@ -12,10 +12,15 @@
 
 const BASE = "https://sports.bzzoiro.com/api/v2";
 
-const LEAGUE_NAMES = {
-  championship: "Championship",
-  league_one: "League One",
-  league_two: "League Two",
+const LEAGUE_INFO = {
+  championship: { name: "Championship", country: "England" },
+  league_one: { name: "League One", country: "England" },
+  league_two: { name: "League Two", country: "England" },
+  premier_league: { name: "Premier League", country: "England" },
+  la_liga: { name: "La Liga", country: "Spain" },
+  serie_a: { name: "Serie A", country: "Italy" },
+  bundesliga: { name: "Bundesliga", country: "Germany" },
+  ligue_1: { name: "Ligue 1", country: "France" },
 };
 
 async function rawGet(url) {
@@ -53,13 +58,13 @@ async function apiGetAllPages(path, params, arrayKey) {
 }
 
 async function findLeagueId(leagueKey) {
-  const targetName = LEAGUE_NAMES[leagueKey];
-  const data = await apiGet("/leagues/", { country: "England", limit: 200 });
+  const info = LEAGUE_INFO[leagueKey];
+  const data = await apiGet("/leagues/", { country: info.country, limit: 200 });
   const leagues = data.results || data.leagues || [];
-  const match = leagues.find((l) => (l.name || "").toLowerCase() === targetName.toLowerCase());
+  const match = leagues.find((l) => (l.name || "").toLowerCase() === info.name.toLowerCase());
   if (!match) {
     throw new Error(
-      `Could not find "${targetName}" in bzzoiro's England leagues (saw: ${leagues.map((l) => l.name).join(", ")})`
+      `Could not find "${info.name}" in bzzoiro's ${info.country} leagues (saw: ${leagues.map((l) => l.name).join(", ")})`
     );
   }
   return match.id;
@@ -84,6 +89,7 @@ async function getLeagueMatches(leagueKey, fromISO, toISO) {
 
   return events.map((e) => ({
     date: (e.event_date || "").slice(0, 10),
+    kickoffISO: e.event_date || null, // real kickoff timestamp — don't discard this
     team1: e.home_team,
     team2: e.away_team,
     team1Id: e.home_team_id,
