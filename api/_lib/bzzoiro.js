@@ -119,11 +119,17 @@ async function getPredictions(leagueKey) {
 // strength-of-schedule adjustment — see _lib/scheduleAdjust.js).
 async function getPlayedMatchups(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
-  const today = new Date().toISOString().slice(0, 10);
-  const data = await apiGet("/events/", { league_id: leagueId, date_to: today, limit: 200 });
+  const now = new Date();
+  const seasonStartYear = now.getUTCMonth() + 1 >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+  const seasonStart = `${seasonStartYear}-07-01`;
+  const today = now.toISOString().slice(0, 10);
+  const data = await apiGet("/events/", {
+    league_id: leagueId,
+    date_from: seasonStart,
+    date_to: today,
+    limit: 200,
+  });
   const events = data.events || data.results || [];
-  // date_to already restricts this to past fixtures — no need to also
-  // guess at a "finished" status string on top of that.
   return events.map((e) => ({ homeTeamId: e.home_team_id, awayTeamId: e.away_team_id }));
 }
 
