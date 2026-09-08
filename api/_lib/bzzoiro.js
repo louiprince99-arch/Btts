@@ -18,21 +18,38 @@ const LEAGUE_NAMES = {
   league_two: "League Two",
 };
 
-async function apiGet(path, params = {}) {
+async function rawGet(url) {
   const key = process.env.BZZOIRO_API_KEY;
   if (!key) throw new Error("BZZOIRO_API_KEY env var is not set");
 
-  const url = new URL(BASE + path);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Token ${key}` },
-  });
+  const res = await fetch(url, { headers: { Authorization: `Token ${key}` } });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`bzzoiro ${path} failed: ${res.status} ${body}`);
+    throw new Error(`bzzoiro request failed: ${res.status} ${body}`);
   }
   return res.json();
+}
+
+async function apiGet(path, params = {}) {
+  const url = new URL(BASE + path);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  return rawGet(url.toString());
+}
+
+// Follows a DRF-style { next: "<absolute url>" } cursor until exhausted,
+// so results aren't silently capped at one page's worth once a league
+// has played enough matches to exceed it. Capped at 20 pages as a
+// sanity limit against an unexpected infinite-pagination bug upstream.
+async function apiGetAllPages(path, params, arrayKey) {
+  let page = await apiGet(path, params);
+  let items = page[arrayKey] || page.results || [];
+  let guard = 0;
+  while (page.next && guard < 20) {
+    page = await rawGet(page.next);
+    items = items.concat(page[arrayKey] || page.results || []);
+    guard += 1;
+  }
+  return items;
 }
 
 async function findLeagueId(leagueKey) {
@@ -123,13 +140,11 @@ async function getPlayedMatchups(leagueKey) {
   const seasonStartYear = now.getUTCMonth() + 1 >= 7 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
   const seasonStart = `${seasonStartYear}-07-01`;
   const today = now.toISOString().slice(0, 10);
-  const data = await apiGet("/events/", {
-    league_id: leagueId,
-    date_from: seasonStart,
-    date_to: today,
-    limit: 200,
-  });
-  const events = data.events || data.results || [];
+  const events = await apiGetAllPages(
+    "/events/",
+    { league_id: leagueId, date_from: seasonStart, date_to: today, limit: 200 },
+    "events"
+  );
   return events.map((e) => ({ homeTeamId: e.home_team_id, awayTeamId: e.away_team_id }));
 }
 
