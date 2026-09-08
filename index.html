@@ -324,12 +324,6 @@ function renderSlate(listEl, updatedEl, accaEl, data, loadFailed){
 
   const rows = data.picks.map((p, i) => {
     const pct = Math.round(p.bttsProbability * 100);
-    let histHtml = '';
-    if (typeof p.historicalBttsRate === 'number') {
-      const histPct = Math.round(p.historicalBttsRate * 100);
-      const diverges = Math.abs(p.historicalBttsRate - p.bttsProbability) > 0.15;
-      histHtml = `<div class="hist ${diverges ? 'diverges' : ''}">${diverges ? '⚠ ' : ''}history ${histPct}%</div>`;
-    }
     return `
     <li class="pick ${i === 0 ? 'top' : ''}">
       <span class="rank">${i+1}</span>
@@ -339,7 +333,6 @@ function renderSlate(listEl, updatedEl, accaEl, data, loadFailed){
           <span class="tag ${p.league}">${leagueShort(p.league)}</span>
           <span>${fmtKickoff(p.kickoff)}</span>
         </div>
-        ${histHtml}
       </span>
       <span class="prob">${pct}%</span>
     </li>`;
