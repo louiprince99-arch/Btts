@@ -1,17 +1,15 @@
-// Routes each league to whichever fixture source actually has it.
-// Championship: openfootball (confirmed working).
-// League One/Two: bzzoiro (openfootball doesn't have these published
-// for this season — see api/_lib/openfootball.js for details).
+// All three leagues now go through bzzoiro. Championship used to come
+// from openfootball, but that source's Championship file turned out
+// to be missing matchdays that genuinely exist (confirmed against
+// real fixtures) — same kind of gap as League One/Two had. bzzoiro
+// covers Championship too, so routing everything through one source
+// removes that risk and gives exact team-ID matching everywhere
+// instead of fuzzy name matching for Championship.
 
-const openfootball = require("./openfootball");
 const bzzoiro = require("./bzzoiro");
 
 async function getLeagueMatches(leagueKey, fromISO, toISO) {
-  if (leagueKey === "league_one" || leagueKey === "league_two") {
-    return bzzoiro.getLeagueMatches(leagueKey, fromISO, toISO);
-  }
-  // openfootball returns the whole season — picks.js filters by window itself.
-  return openfootball.getLeagueMatches(leagueKey);
+  return bzzoiro.getLeagueMatches(leagueKey, fromISO, toISO);
 }
 
 module.exports = { getLeagueMatches };
