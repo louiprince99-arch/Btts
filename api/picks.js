@@ -1,15 +1,17 @@
-const { getStandings } = require("./_lib/bzzoiro");
+const { getStandings, getPlayedMatchups } = require("./_lib/bzzoiro");
 const { getLeagueMatches } = require("./_lib/fixtures");
 const { buildResolver } = require("./_lib/teamMatch");
 const { bttsProbability } = require("./_lib/model");
+const { applyScheduleAdjustment } = require("./_lib/scheduleAdjust");
 
 // GET /api/picks?slate=midweek|saturday
 // Our own Poisson BTTS calc (see _lib/model.js), fed by live season xG
 // stats from bzzoiro's standings endpoint (xgf/xga, season-total —
-// not split by home/away, since that split isn't confirmed available;
-// see _lib/bzzoiro.js). Fixtures: Championship from openfootball,
-// League One/Two from bzzoiro (see _lib/fixtures.js). Nothing bundled,
-// nothing frozen — every call hits both APIs fresh.
+// not split by home/away). Each team's rate is then adjusted for
+// strength of schedule (see _lib/scheduleAdjust.js) using who they've
+// actually played so far, so padded stats from a soft run of fixtures
+// get discounted. Fixtures for all three leagues come from bzzoiro.
+// Nothing bundled, nothing frozen — every call hits the API fresh.
 
 const LEAGUES = ["championship", "league_one", "league_two"];
 
@@ -45,16 +47,19 @@ module.exports = async (req, res) => {
     const leagueErrors = [];
 
     for (const leagueKey of LEAGUES) {
-      let statsByTeamId, matches;
+      let statsByTeamId, matches, matchups;
       try {
-        [statsByTeamId, matches] = await Promise.all([
+        [statsByTeamId, matches, matchups] = await Promise.all([
           getStandings(leagueKey),
           getLeagueMatches(leagueKey, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10)),
+          getPlayedMatchups(leagueKey),
         ]);
       } catch (err) {
         leagueErrors.push({ league: leagueKey, error: err.message });
         continue;
       }
+
+      statsByTeamId = applyScheduleAdjustment(statsByTeamId, matchups);
 
       // Fallback name-based resolver, for fixtures sources (openfootball)
       // that don't carry bzzoiro's team ids.
@@ -87,6 +92,8 @@ module.exports = async (req, res) => {
           bttsProbability: Number(prob.toFixed(3)),
           homeExpectedGoals,
           awayExpectedGoals,
+          homeScheduleStrength: homeStats.scheduleStrength,
+          awayScheduleStrength: awayStats.scheduleStrength,
         });
       }
     }
