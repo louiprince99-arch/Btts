@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Chirish and GLS BTTS — Top 19</title>
+<title>Chirish and GLS — Top 19 Win</title>
 <style>
   :root{
     --bg-top:#0d1117;
@@ -283,6 +283,7 @@
   .chip.ok{ color:var(--ink); border-color:var(--card-border); }
   .chip.none{ opacity:0.45; }
   main.single{ grid-template-columns:1fr; }
+  .opp{ font-size:0.58rem; color:var(--ink-dim); font-weight:600; }
   .chip.err{ color:var(--amber); border-color:rgba(255,184,77,0.35); }
 </style>
 
@@ -290,12 +291,11 @@
 <body>
 <header>
   <div class="brand">
-    <span class="name">BTTS Top 19</span>
+    <span class="name">Top 19 Win</span>
     <span class="live"><span class="dot"></span>LIVE MODEL</span>
   </div>
   <div class="actions">
-    <a class="nav" href="/">EFL</a>
-    <a class="nav" href="/top19win.html">Win</a>
+    <a class="nav" href="/top19.html">BTTS</a>
     <button class="generate" id="generate-btn" onclick="loadPicks()">Generate</button>
   </div>
 </header>
@@ -308,7 +308,7 @@
 <main class="single">
   <section class="slate">
     <div class="slate-head">
-      <h2>Weekend</h2>
+      <h2>Weekend Win Acca</h2>
       <span class="updated" id="weekend-updated">—</span>
     </div>
     <div class="acca-line" id="weekend-acca"></div>
@@ -373,8 +373,19 @@ function renderSlate(slate, pool, done, generatedAt){
   const listEl = document.getElementById(slate + '-list');
   const accaEl = document.getElementById(slate + '-acca');
   const updEl = document.getElementById(slate + '-updated');
-  const picks = pool.filter(c => c.slate === slate)
-    .sort((a,b) => b.bttsProbability - a.bttsProbability)
+  // Back whichever side is more likely to win, rank by that probability.
+  const picks = pool.filter(c => c.slate === slate && typeof c.homeWinProbability === 'number')
+    .map(c => {
+      const homeFav = c.homeWinProbability >= c.awayWinProbability;
+      return {
+        ...c,
+        pick: homeFav ? c.home : c.away,
+        opponent: homeFav ? c.away : c.home,
+        venue: homeFav ? 'H' : 'A',
+        winProbability: homeFav ? c.homeWinProbability : c.awayWinProbability,
+      };
+    })
+    .sort((a,b) => b.winProbability - a.winProbability)
     .slice(0, ACCA_SIZE);
 
   if (!picks.length){
@@ -386,7 +397,7 @@ function renderSlate(slate, pool, done, generatedAt){
     return;
   }
 
-  const acca = picks.reduce((p, c) => p * c.bttsProbability, 1);
+  const acca = picks.reduce((p, c) => p * c.winProbability, 1);
   accaEl.innerHTML = `<span class="label">Acca odds</span>${(acca*100).toFixed(1)}%` +
     (done ? '' : ' <span class="label">· still scanning</span>');
   updEl.textContent = done ? 'updated ' + fmtGenerated(generatedAt) : 'scanning…';
@@ -395,13 +406,13 @@ function renderSlate(slate, pool, done, generatedAt){
     <li class="pick ${i === 0 ? 'top' : ''}">
       <span class="rank">${i+1}</span>
       <span class="fixture">
-        <div class="teams">${esc(p.home)} v ${esc(p.away)}</div>
+        <div class="teams">${esc(p.pick)} <span class="opp">v ${esc(p.opponent)} (${p.venue})</span></div>
         <div class="meta">
           <span class="tag" style="${tagStyle(p.league)}">${META[p.league] ? META[p.league].short : esc(p.league)}</span>
           <span>${fmtKickoff(p.kickoff)}</span>
         </div>
       </span>
-      <span class="prob">${Math.round(p.bttsProbability * 100)}%</span>
+      <span class="prob">${Math.round(p.winProbability * 100)}%</span>
     </li>`).join('');
 
   listEl.innerHTML = rows;
