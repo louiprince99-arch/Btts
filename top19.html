@@ -249,17 +249,18 @@
     animation:shimmer 1.3s ease-in-out infinite;
   }
 
-  a.nav{
-    color:var(--ink-dim);
-    font-size:0.62rem;
-    font-weight:700;
-    text-decoration:none;
-    border:1px solid var(--card-border);
-    border-radius:999px;
-    padding:0.4rem 0.7rem;
-    flex-shrink:0;
+  nav.tabs{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:0.3rem;
+    background:var(--card); border:1px solid var(--card-border);
+    border-radius:14px; padding:0.3rem; margin:-0.2rem 0 0.8rem;
   }
-  .actions{ display:flex; gap:0.4rem; align-items:center; }
+  nav.tabs a{
+    text-align:center; text-decoration:none;
+    font-size:0.64rem; font-weight:800; letter-spacing:0;
+    color:var(--ink-dim); padding:0.6rem 0.15rem; border-radius:10px; white-space:nowrap;
+  }
+  nav.tabs a.active{ background:var(--lime); color:#0a1206; box-shadow:0 2px 12px rgba(186,255,61,0.25); }
+  nav.tabs a:not(.active):active{ background:rgba(255,255,255,0.06); }
   .progress{
     height:3px;
     border-radius:3px;
@@ -293,12 +294,15 @@
     <span class="name">BTTS Top 19</span>
     <span class="live"><span class="dot"></span>LIVE MODEL</span>
   </div>
-  <div class="actions">
-    <a class="nav" href="/">EFL</a>
-    <a class="nav" href="/top19win.html">Win</a>
-    <button class="generate" id="generate-btn" onclick="loadPicks()">Generate</button>
-  </div>
+  <button class="generate" id="generate-btn" onclick="loadPicks()">Generate</button>
 </header>
+
+<nav class="tabs">
+  <a href="/">EFL</a>
+  <a href="/big5.html">Big 5</a>
+  <a href="/top19.html" class="active">Top 19 BTTS</a>
+  <a href="/top19win.html">Top 19 Win</a>
+</nav>
 
 <div class="progress" id="progress"><div class="bar" id="progress-bar"></div></div>
 <div class="status-line" id="status-line"></div>

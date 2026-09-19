@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Chirish and GLS BTTS Picks</title>
+<title>Chirish and GLS — Big 5 BTTS</title>
 <style>
   :root{
     --bg-top:#0d1117;
@@ -265,45 +265,33 @@
 <body>
 <header>
   <div class="brand">
-    <span class="name">Chirish and GLS BTTS Picks</span>
+    <span class="name">Big 5 BTTS</span>
     <span class="live"><span class="dot"></span>LIVE MODEL</span>
   </div>
   <button class="generate" id="generate-btn" onclick="loadPicks()">Generate</button>
 </header>
 
 <nav class="tabs">
-  <a href="/" class="active">EFL</a>
-  <a href="/big5.html">Big 5</a>
+  <a href="/">EFL</a>
+  <a href="/big5.html" class="active">Big 5</a>
   <a href="/top19.html">Top 19 BTTS</a>
   <a href="/top19win.html">Top 19 Win</a>
 </nav>
 
 <div class="banner" id="coverage-banner"></div>
 
-<main>
-  <section class="slate">
-    <div class="slate-head">
-      <h2>Midweek</h2>
-      <span class="updated" id="midweek-updated">—</span>
-    </div>
-    <div class="acca-line" id="midweek-acca"></div>
-    <ol class="picks" id="midweek-list">
-      <li class="empty">Tap Generate to pull picks</li>
-    </ol>
-  </section>
 
-  <section class="slate">
-    <div class="slate-head">
-      <h2>Saturday</h2>
-      <span class="updated" id="saturday-updated">—</span>
-    </div>
-    <div class="acca-line" id="saturday-acca"></div>
-    <ol class="picks" id="saturday-list">
-      <li class="empty">Tap Generate to pull picks</li>
-    </ol>
-  </section>
-</main>
 
+<section class="slate">
+  <div class="slate-head">
+    <h2>Weekend</h2>
+    <span class="updated" id="top5-updated">—</span>
+  </div>
+  <div class="acca-line" id="top5-acca"></div>
+  <ol class="picks" id="top5-list">
+    <li class="empty">Tap Generate to pull picks</li>
+  </ol>
+</section>
 
 <script>
 function fmtKickoff(iso){
@@ -401,28 +389,19 @@ function loadPicks(){
   const btn = document.getElementById('generate-btn');
   btn.disabled = true;
   btn.textContent = '···';
-  renderSkeleton(document.getElementById('midweek-list'));
-  renderSkeleton(document.getElementById('saturday-list'));
+  renderSkeleton(document.getElementById('top5-list'));
 
   Promise.allSettled([
-    fetch('/api/picks?slate=midweek').then(r => r.json()),
-    fetch('/api/picks?slate=saturday').then(r => r.json()),
-  ]).then(([midweek, saturday]) => {
+    fetch('/api/picks-top5').then(r => r.json()),
+  ]).then(([top5]) => {
     renderSlate(
-      document.getElementById('midweek-list'),
-      document.getElementById('midweek-updated'),
-      document.getElementById('midweek-acca'),
-      midweek.status === 'fulfilled' ? midweek.value : null,
-      midweek.status !== 'fulfilled'
+      document.getElementById('top5-list'),
+      document.getElementById('top5-updated'),
+      document.getElementById('top5-acca'),
+      top5.status === 'fulfilled' ? top5.value : null,
+      top5.status !== 'fulfilled'
     );
-    renderSlate(
-      document.getElementById('saturday-list'),
-      document.getElementById('saturday-updated'),
-      document.getElementById('saturday-acca'),
-      saturday.status === 'fulfilled' ? saturday.value : null,
-      saturday.status !== 'fulfilled'
-    );
-    renderCoverageBanner([midweek, saturday]);
+    renderCoverageBanner([top5]);
   }).finally(() => {
     btn.disabled = false;
     btn.textContent = 'Generate';
