@@ -282,6 +282,7 @@
   .chip.loading{ animation:shimmer 1.3s ease-in-out infinite; }
   .chip.ok{ color:var(--ink); border-color:var(--card-border); }
   .chip.none{ opacity:0.45; }
+  main.single{ grid-template-columns:1fr; }
   .chip.err{ color:var(--amber); border-color:rgba(255,184,77,0.35); }
 </style>
 
@@ -303,18 +304,7 @@
 <div class="chips" id="chips"></div>
 <div class="banner" id="coverage-banner"></div>
 
-<main>
-  <section class="slate">
-    <div class="slate-head">
-      <h2>Midweek</h2>
-      <span class="updated" id="midweek-updated">—</span>
-    </div>
-    <div class="acca-line" id="midweek-acca"></div>
-    <ol class="picks" id="midweek-list">
-      <li class="empty">Tap Generate to pull picks</li>
-    </ol>
-  </section>
-
+<main class="single">
   <section class="slate">
     <div class="slate-head">
       <h2>Weekend</h2>
@@ -440,9 +430,8 @@ async function loadPicks(){
   banner.style.display = 'none';
   progress.classList.add('on');
   bar.style.width = '0';
-  renderSkeleton(document.getElementById('midweek-list'));
   renderSkeleton(document.getElementById('weekend-list'));
-  ['midweek','weekend'].forEach(s => {
+  ['weekend'].forEach(s => {
     document.getElementById(s + '-acca').textContent = '';
     document.getElementById(s + '-updated').textContent = '—';
   });
@@ -466,7 +455,6 @@ async function loadPicks(){
       ? `${pool.length} fixtures scored across ${LEAGUES.length - failed.length - noData.length} leagues · ${((performance.now()-t0)/1000).toFixed(1)}s`
       : `Scanning leagues ${finished}/${LEAGUES.length}…`;
     renderChips(chipState);
-    renderSlate('midweek', pool, done, generatedAt);
     renderSlate('weekend', pool, done, generatedAt);
   };
 
