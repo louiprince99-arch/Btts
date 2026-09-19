@@ -6,15 +6,14 @@ const { applyFormAndHistory } = require("./_lib/formStats");
 
 // GET /api/league-candidates?league=<key>
 //
-// One league per call, scored for BOTH slates at once:
-//   midweek = next Tue 00:00 -> Thu 23:59 (UTC)
+// One league per call, weekend only:
 //   weekend = next Sat 00:00 -> Sun 23:59 (UTC)
 // The top-20 page fires one of these per league in parallel and pools
 // the results in the browser, so each function stays small and fast,
 // no single request has to wait on 20 leagues, and picks fill in as
 // leagues land.
 //
-// Speed: fixtures are fetched first (1 call covering both windows).
+// Speed: fixtures are fetched first (1 call for the weekend window).
 // If the league has nothing to score, it returns straight away —
 // standings + played matches are only fetched when there's a fixture
 // to use them on.
@@ -37,27 +36,13 @@ function nextWeekday(from, targetDay) {
   return d;
 }
 
-function windows(now = new Date()) {
-  const tue = nextWeekday(now, 2);
-  const thuEnd = new Date(tue);
-  thuEnd.setUTCDate(thuEnd.getUTCDate() + 2);
-  thuEnd.setUTCHours(23, 59, 59, 0);
-
+function weekendWindow(now = new Date()) {
   const sat = nextWeekday(now, 6);
   const sunEnd = new Date(sat);
   sunEnd.setUTCDate(sunEnd.getUTCDate() + 1);
   sunEnd.setUTCHours(23, 59, 59, 0);
 
-  return {
-    midweek: { from: tue, to: thuEnd },
-    weekend: { from: sat, to: sunEnd },
-  };
-}
-
-function slateFor(kickoff, w) {
-  if (kickoff >= w.midweek.from && kickoff <= w.midweek.to) return "midweek";
-  if (kickoff >= w.weekend.from && kickoff <= w.weekend.to) return "weekend";
-  return null;
+  return { from: sat, to: sunEnd };
 }
 
 const day = (d) => d.toISOString().slice(0, 10);
@@ -65,14 +50,11 @@ const day = (d) => d.toISOString().slice(0, 10);
 module.exports = async (req, res) => {
   const league = req.query.league;
   const now = new Date();
-  const w = windows(now);
+  const w = weekendWindow(now);
   const base = {
     league,
     generatedAt: now.toISOString(),
-    windows: {
-      midweek: { from: w.midweek.from.toISOString(), to: w.midweek.to.toISOString() },
-      weekend: { from: w.weekend.from.toISOString(), to: w.weekend.to.toISOString() },
-    },
+    window: { from: w.from.toISOString(), to: w.to.toISOString() },
   };
 
   if (!TOP20.has(league)) {
@@ -80,19 +62,15 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const fetchFrom = w.midweek.from < w.weekend.from ? w.midweek.from : w.weekend.from;
-    const fetchTo = w.midweek.to > w.weekend.to ? w.midweek.to : w.weekend.to;
+    const matches = await getLeagueMatches(league, day(w.from), day(w.to));
 
-    const matches = await getLeagueMatches(league, day(fetchFrom), day(fetchTo));
-
-    // Keep only unplayed, not-yet-kicked-off fixtures inside a slate.
+    // Keep only unplayed, not-yet-kicked-off weekend fixtures.
     const upcoming = [];
     for (const m of matches) {
       if (m.played || !m.date) continue;
       const kickoff = m.kickoffISO ? new Date(m.kickoffISO) : new Date(`${m.date}T15:00:00Z`);
-      if (kickoff <= now) continue;
-      const slate = slateFor(kickoff, w);
-      if (slate) upcoming.push({ ...m, kickoff, slate });
+      if (kickoff <= now || kickoff < w.from || kickoff > w.to) continue;
+      upcoming.push({ ...m, kickoff });
     }
 
     if (!upcoming.length) {
@@ -134,7 +112,7 @@ module.exports = async (req, res) => {
 
       candidates.push({
         league,
-        slate: m.slate,
+        slate: "weekend",
         kickoff: m.kickoff.toISOString(),
         home: m.team1,
         away: m.team2,
