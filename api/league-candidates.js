@@ -1,6 +1,6 @@
 const { getStandings, getPlayedMatches, getLeagueMatches } = require("./_lib/bzzoiro");
 const { buildResolver } = require("./_lib/teamMatch");
-const { bttsProbability } = require("./_lib/model");
+const { bttsProbability, resultProbabilities } = require("./_lib/model");
 const { applyScheduleAdjustment } = require("./_lib/scheduleAdjust");
 const { applyFormAndHistory } = require("./_lib/formStats");
 
@@ -19,7 +19,8 @@ const { applyFormAndHistory } = require("./_lib/formStats");
 // to use them on.
 //
 // Same scoring as every other picker: xG standings -> schedule
-// strength -> venue form -> Poisson BTTS.
+// strength -> venue form -> Poisson BTTS. Also returns home/draw/away
+// win probabilities from the same expected goals (used by top19win).
 
 const TOP20 = new Set([
   "premier_league", "la_liga", "serie_a", "bundesliga", "ligue_1",
@@ -109,6 +110,7 @@ module.exports = async (req, res) => {
 
       const { bttsProbability: prob, homeExpectedGoals, awayExpectedGoals } =
         bttsProbability(home, away);
+      const result = resultProbabilities(homeExpectedGoals, awayExpectedGoals);
 
       candidates.push({
         league,
@@ -117,6 +119,9 @@ module.exports = async (req, res) => {
         home: m.team1,
         away: m.team2,
         bttsProbability: Number(prob.toFixed(3)),
+        homeWinProbability: Number(result.home.toFixed(3)),
+        drawProbability: Number(result.draw.toFixed(3)),
+        awayWinProbability: Number(result.away.toFixed(3)),
         historicalBttsRate:
           home.bttsRate != null && away.bttsRate != null
             ? Number(((home.bttsRate + away.bttsRate) / 2).toFixed(3))
