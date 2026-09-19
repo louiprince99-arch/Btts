@@ -25,7 +25,7 @@ const TOP20 = new Set([
   "premier_league", "la_liga", "serie_a", "bundesliga", "ligue_1",
   "primeira_liga", "eredivisie", "belgian_pro", "super_lig", "scottish_prem",
   "championship", "bundesliga_2", "segunda", "austrian_bl", "swiss_super",
-  "greek_super", "danish_super", "brasileirao", "argentina_lpf", "mls",
+  "greek_super", "danish_super", "brasileirao", "mls",
 ]);
 
 function nextWeekday(from, targetDay) {
