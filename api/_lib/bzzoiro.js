@@ -1,143 +1,146 @@
-// Bzzoiro Sports Data (BSD) client
-// Used for League One / League Two fixtures.
-// Championship continues using the existing openfootball pipeline.
+// Bzzoiro Sports Data (BSD) client — all live data for every picker.
 //
-// Optimisations:
-// - League IDs are cached per process to avoid repeated /leagues/ calls.
-// - Independent API requests can run concurrently.
-// - Pagination is preserved.
-// - Existing functionality and returned data shape are preserved.
-// - Uses Promise.all where requests are independent.
-// - Avoids unnecessary Date/string work.
-// - Keeps a 20-page pagination safety limit.
+// Speed notes:
+// - League IDs are hardcoded from bzzoiro's own league list
+//   (sports.bzzoiro.com/leagues/), so no /leagues/ lookup call is
+//   needed. Any league without an `id` falls back to a name lookup.
+// - Pagination uses limit/offset + `count`: first page tells us how
+//   many pages exist, the rest are fetched in parallel.
+// - 429s are retried briefly instead of failing the whole league.
 //
 // Env var required:
 //   BZZOIRO_API_KEY
 
 const BASE = "https://sports.bzzoiro.com/api/v2";
 const MAX_PAGES = 20;
+const PAGE_LIMIT = 200; // bzzoiro max
 
+// seasonStartMonth: 7 = Jul (European seasons), 1 = Jan (calendar-year
+// leagues). Used to scope "played this season" matches.
 const LEAGUE_INFO = {
-  championship: { name: "Championship", country: "England" },
-  league_one: { name: "League One", country: "England" },
-  league_two: { name: "League Two", country: "England" },
-  premier_league: { name: "Premier League", country: "England" },
-  la_liga: { name: "La Liga", country: "Spain" },
-  serie_a: { name: "Serie A", country: "Italy" },
-  bundesliga: { name: "Bundesliga", country: "Germany" },
-  ligue_1: { name: "Ligue 1", country: "France" },
+  // EFL
+  championship: { id: 12, name: "Championship", country: "England" },
+  league_one: { id: 86, name: "League One", country: "England" },
+  league_two: { id: 87, name: "League Two", country: "England" },
+  // Top 5
+  premier_league: { id: 1, name: "Premier League", country: "England" },
+  la_liga: { id: 3, name: "La Liga", country: "Spain" },
+  serie_a: { id: 4, name: "Serie A", country: "Italy" },
+  bundesliga: { id: 5, name: "Bundesliga", country: "Germany" },
+  ligue_1: { id: 6, name: "Ligue 1", country: "France" },
+  // Rest of the top 20
+  primeira_liga: { id: 2, name: "Liga Portugal Betclic", country: "Portugal" },
+  eredivisie: { id: 10, name: "Eredivisie", country: "Netherlands" },
+  belgian_pro: { id: 14, name: "Pro League", country: "Belgium" },
+  super_lig: { id: 11, name: "Trendyol Super Lig", country: "Turkey" },
+  scottish_prem: { id: 13, name: "Scottish Premiership", country: "Scotland" },
+  bundesliga_2: { id: 94, name: "2. Bundesliga", country: "Germany" },
+  segunda: { id: 38, name: "Segunda División", country: "Spain" },
+  austrian_bl: { id: 96, name: "Austrian Bundesliga", country: "Austria" },
+  swiss_super: { id: 15, name: "Super League", country: "Switzerland" },
+  greek_super: { id: 24, name: "Stoiximan Super League", country: "Greece" },
+  danish_super: { id: 84, name: "Danish Superliga", country: "Denmark" },
+  brasileirao: { id: 9, name: "Brasileirão Serie A", country: "Brazil", seasonStartMonth: 1 },
+  argentina_lpf: { id: 85, name: "Liga Profesional de Fútbol", country: "Argentina", seasonStartMonth: 1 },
+  mls: { id: 18, name: "MLS", country: "USA", seasonStartMonth: 1 },
 };
 
-// Cache league IDs for the lifetime of this Node process.
-// This removes repeated /leagues/ requests when multiple functions
-// are called for the same league.
 const leagueIdCache = new Map();
-
-// Cache in-flight lookups too.
-// If several functions request the same league simultaneously,
-// they all share the same HTTP request rather than creating duplicates.
 const leagueIdPromises = new Map();
 
-async function rawGet(url) {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function rawGet(url, attempt = 0) {
   const key = process.env.BZZOIRO_API_KEY;
+  if (!key) throw new Error("BZZOIRO_API_KEY env var is not set");
 
-  if (!key) {
-    throw new Error("BZZOIRO_API_KEY env var is not set");
+  const res = await fetch(url, { headers: { Authorization: `Token ${key}` } });
+
+  if (res.status === 429 && attempt < 2) {
+    const retryAfter = Number(res.headers.get("retry-after"));
+    const wait = Number.isFinite(retryAfter) && retryAfter > 0
+      ? Math.min(retryAfter * 1000, 3000)
+      : 700 * (attempt + 1);
+    await sleep(wait);
+    return rawGet(url, attempt + 1);
   }
-
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Token ${key}`,
-    },
-  });
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`bzzoiro request failed: ${res.status} ${body}`);
+    throw new Error(`bzzoiro request failed: ${res.status} ${body.slice(0, 200)}`);
   }
-
   return res.json();
 }
 
-async function apiGet(path, params = {}) {
+function buildUrl(path, params = {}) {
   const url = new URL(BASE + path);
-
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null) {
-      url.searchParams.set(key, value);
-    }
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null) url.searchParams.set(k, v);
   }
-
-  return rawGet(url.toString());
+  return url.toString();
 }
 
-// Follows DRF-style { next: "<absolute url>" } pagination.
-//
-// Kept sequential because each "next" URL is normally a cursor/page
-// dependent on the previous response, so parallelising these requests
-// would not improve performance and could break cursor semantics.
+async function apiGet(path, params = {}) {
+  return rawGet(buildUrl(path, params));
+}
+
+// First page gives `count`; remaining offset pages fetched in parallel.
+// Falls back to following `next` sequentially if `count` isn't present.
 async function apiGetAllPages(path, params, arrayKey) {
-  let page = await apiGet(path, params);
-  let items = page[arrayKey] || page.results || [];
+  const limit = params.limit || PAGE_LIMIT;
+  const first = await apiGet(path, { ...params, limit, offset: 0 });
+  const pick = (p) => p[arrayKey] || p.results || [];
+  let items = pick(first);
 
-  let pageCount = 1;
+  if (!first.next) return items;
 
-  while (page.next && pageCount < MAX_PAGES) {
-    page = await rawGet(page.next);
-
-    items = items.concat(page[arrayKey] || page.results || []);
-    pageCount += 1;
+  if (typeof first.count === "number") {
+    const pages = Math.min(Math.ceil(first.count / limit), MAX_PAGES);
+    const rest = await Promise.all(
+      Array.from({ length: pages - 1 }, (_, i) =>
+        apiGet(path, { ...params, limit, offset: (i + 1) * limit })
+      )
+    );
+    for (const p of rest) items = items.concat(pick(p));
+    return items;
   }
 
+  let page = first;
+  let n = 1;
+  while (page.next && n < MAX_PAGES) {
+    page = await rawGet(page.next);
+    items = items.concat(pick(page));
+    n += 1;
+  }
   return items;
 }
 
 async function findLeagueId(leagueKey) {
-  // Fast path: already resolved.
-  if (leagueIdCache.has(leagueKey)) {
-    return leagueIdCache.get(leagueKey);
-  }
-
-  // If another function is already resolving this league,
-  // wait for that request instead of sending another one.
-  if (leagueIdPromises.has(leagueKey)) {
-    return leagueIdPromises.get(leagueKey);
-  }
-
   const info = LEAGUE_INFO[leagueKey];
+  if (!info) throw new Error(`Unknown league key: ${leagueKey}`);
+  if (info.id) return info.id;
 
-  if (!info) {
-    throw new Error(`Unknown league key: ${leagueKey}`);
-  }
+  if (leagueIdCache.has(leagueKey)) return leagueIdCache.get(leagueKey);
+  if (leagueIdPromises.has(leagueKey)) return leagueIdPromises.get(leagueKey);
 
   const promise = (async () => {
-    const data = await apiGet("/leagues/", {
-      country: info.country,
-      limit: 200,
-    });
-
+    const data = await apiGet("/leagues/", { country: info.country, limit: 200 });
     const leagues = data.results || data.leagues || [];
-
     const match = leagues.find(
-      (league) =>
-        (league.name || "").toLowerCase() === info.name.toLowerCase()
+      (l) => (l.name || "").toLowerCase() === info.name.toLowerCase()
     );
-
     if (!match) {
       throw new Error(
         `Could not find "${info.name}" in bzzoiro's ${info.country} leagues (saw: ${leagues
-          .map((league) => league.name)
+          .map((l) => l.name)
           .join(", ")})`
       );
     }
-
     leagueIdCache.set(leagueKey, match.id);
-
     return match.id;
   })();
 
   leagueIdPromises.set(leagueKey, promise);
-
   try {
     return await promise;
   } finally {
@@ -145,7 +148,6 @@ async function findLeagueId(leagueKey) {
   }
 }
 
-// Heuristic for "hasn't been played yet".
 function looksFinished(status) {
   return /final|finish|ended|ft\b|full.?time/i.test(status || "");
 }
@@ -158,14 +160,11 @@ function looksUnavailable(status) {
 async function getLeagueMatches(leagueKey, fromISO, toISO) {
   const leagueId = await findLeagueId(leagueKey);
 
-  const data = await apiGet("/events/", {
-    league_id: leagueId,
-    date_from: fromISO,
-    date_to: toISO,
-    limit: 100,
-  });
-
-  const events = data.events || data.results || [];
+  const events = await apiGetAllPages(
+    "/events/",
+    { league_id: leagueId, date_from: fromISO, date_to: toISO, limit: PAGE_LIMIT },
+    "events"
+  );
 
   return events.map((e) => ({
     date: (e.event_date || "").slice(0, 10),
@@ -174,97 +173,66 @@ async function getLeagueMatches(leagueKey, fromISO, toISO) {
     team2: e.away_team,
     team1Id: e.home_team_id,
     team2Id: e.away_team_id,
-    played:
-      looksFinished(e.status) ||
-      looksUnavailable(e.status),
+    played: looksFinished(e.status) || looksUnavailable(e.status),
   }));
 }
 
 async function getStandings(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
-
-  const data = await apiGet(
-    `/leagues/${leagueId}/standings/`
-  );
-
+  const data = await apiGet(`/leagues/${leagueId}/standings/`);
   const rows = data.standings || [];
   const stats = {};
 
   for (const row of rows) {
     if (!row.played) continue;
-
-    const xgFor =
-      typeof row.xgf === "number"
-        ? row.xgf / row.played
-        : null;
-
-    const xgAgainst =
-      typeof row.xga === "number"
-        ? row.xga / row.played
-        : null;
-
-    if (xgFor === null || xgAgainst === null) {
-      continue;
-    }
+    const xgFor = typeof row.xgf === "number" ? row.xgf / row.played : null;
+    const xgAgainst = typeof row.xga === "number" ? row.xga / row.played : null;
+    if (xgFor === null || xgAgainst === null) continue;
 
     stats[row.team_id] = {
       name: row.team_name,
       teamId: row.team_id,
       played: row.played,
       points: row.pts,
-
-      // Season-total xG rates.
       goalsForHome: xgFor,
       goalsForAway: xgFor,
       goalsAgainstHome: xgAgainst,
       goalsAgainstAway: xgAgainst,
     };
   }
-
   return stats;
 }
 
 async function getPredictions(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
-
-  const data = await apiGet("/predictions/", {
-    league_id: leagueId,
-    limit: 200,
-  });
-
+  const data = await apiGet("/predictions/", { league_id: leagueId, limit: 200 });
   return data.results || data.predictions || [];
+}
+
+function seasonStartISO(leagueKey, now = new Date()) {
+  const startMonth = (LEAGUE_INFO[leagueKey] && LEAGUE_INFO[leagueKey].seasonStartMonth) || 7;
+  const year =
+    now.getUTCMonth() + 1 >= startMonth ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+  return `${year}-${String(startMonth).padStart(2, "0")}-01`;
 }
 
 async function getPlayedMatches(leagueKey) {
   const leagueId = await findLeagueId(leagueKey);
-
   const now = new Date();
-
-  const seasonStartYear =
-    now.getUTCMonth() + 1 >= 7
-      ? now.getUTCFullYear()
-      : now.getUTCFullYear() - 1;
-
-  const seasonStart = `${seasonStartYear}-07-01`;
-  const today = now.toISOString().slice(0, 10);
 
   const events = await apiGetAllPages(
     "/events/",
     {
       league_id: leagueId,
-      date_from: seasonStart,
-      date_to: today,
-      limit: 200,
+      date_from: seasonStartISO(leagueKey, now),
+      date_to: now.toISOString().slice(0, 10),
+      limit: PAGE_LIMIT,
     },
     "events"
   );
 
   return events
-    .filter(
-      (e) =>
-        typeof e.home_score === "number" &&
-        typeof e.away_score === "number"
-    )
+    .filter((e) => typeof e.home_score === "number" && typeof e.away_score === "number")
     .map((e) => ({
       homeTeamId: e.home_team_id,
       awayTeamId: e.away_team_id,
@@ -275,6 +243,7 @@ async function getPlayedMatches(leagueKey) {
 }
 
 module.exports = {
+  LEAGUE_INFO,
   getLeagueMatches,
   getPredictions,
   getStandings,
