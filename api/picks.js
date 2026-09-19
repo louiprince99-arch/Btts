@@ -1,6 +1,6 @@
 const { computeCandidates, buildResponse } = require("./_lib/pickEngine");
 
-// GET /api/picks?slate=midweek|saturday
+// GET /api/picks?slate=midweek|saturday|weekend
 // EFL Championship / League One / League Two. See _lib/pickEngine.js
 // for the actual scoring pipeline — this file just picks the leagues
 // and date window.
@@ -17,6 +17,16 @@ function nextWeekday(from, targetDay) {
 
 function windowForSlate(slate) {
   const now = new Date();
+  if (slate === "weekend") {
+    // Fri 00:00 -> Sun 23:59 around the coming Saturday.
+    const sat = nextWeekday(now, 6);
+    const fri = new Date(sat);
+    fri.setUTCDate(fri.getUTCDate() - 1);
+    const sunEnd = new Date(sat);
+    sunEnd.setUTCDate(sunEnd.getUTCDate() + 1);
+    sunEnd.setUTCHours(23, 59, 59, 0);
+    return { from: fri, to: sunEnd };
+  }
   if (slate === "saturday") {
     const sat = nextWeekday(now, 6);
     const end = new Date(sat);
@@ -31,7 +41,7 @@ function windowForSlate(slate) {
 
 module.exports = async (req, res) => {
   try {
-    const slate = req.query.slate === "saturday" ? "saturday" : "midweek";
+    const slate = ["saturday", "weekend"].includes(req.query.slate) ? req.query.slate : "midweek";
     const { from, to } = windowForSlate(slate);
     const result = await computeCandidates(LEAGUES, from, to);
     res.status(200).json(buildResponse(slate, LEAGUES, from, to, result));
