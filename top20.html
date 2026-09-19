@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chirish and GLS BTTS — Top 20</title>
+<style>
+  :root{
+    --bg-top:#0d1117;
+    --bg-bottom:#05070a;
+    --card:rgba(255,255,255,0.04);
+    --card-border:rgba(255,255,255,0.08);
+    --ink:#f5f7f5;
+    --ink-dim:#8b95a1;
+    --lime:#baff3d;
+    --lime-dim:rgba(186,255,61,0.15);
+    --cyan:#4fd8e8;
+    --violet:#a78bfa;
+    --amber:#ffb84d;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100%;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(186,255,61,0.06), transparent 45%),
+      radial-gradient(circle at 100% 100%, rgba(79,216,232,0.05), transparent 50%),
+      linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif;
+    padding:0.85rem;
+    display:flex;
+    flex-direction:column;
+  }
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:0.6rem;
+    margin-bottom:0.75rem;
+  }
+  .brand{ display:flex; flex-direction:column; min-width:0; }
+  .brand .name{
+    font-size:0.95rem;
+    font-weight:800;
+    letter-spacing:-0.01em;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .brand .live{
+    display:inline-flex;
+    align-items:center;
+    gap:0.3rem;
+    font-size:0.6rem;
+    font-weight:700;
+    color:var(--lime);
+    letter-spacing:0.06em;
+    margin-top:0.1rem;
+  }
+  .brand .live .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--lime);
+    box-shadow:0 0 6px var(--lime);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+  button.generate{
+    background:var(--lime);
+    color:#0a1206;
+    border:none;
+    border-radius:999px;
+    padding:0.55rem 1.1rem;
+    font-family:inherit;
+    font-size:0.75rem;
+    font-weight:800;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    flex-shrink:0;
+    box-shadow:0 4px 18px rgba(186,255,61,0.25);
+  }
+  button.generate:active{ transform:scale(0.97); }
+  button.generate:disabled{ opacity:0.5; box-shadow:none; }
+
+  .banner{
+    background:rgba(255,184,77,0.12);
+    border:1px solid rgba(255,184,77,0.3);
+    color:var(--amber);
+    font-size:0.68rem;
+    font-weight:600;
+    padding:0.5rem 0.75rem;
+    border-radius:10px;
+    display:none;
+    margin-bottom:0.6rem;
+  }
+
+  main{
+    flex:1;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0.6rem;
+  }
+  @media (max-width:480px){
+    main{ grid-template-columns:1fr; }
+  }
+
+  section.slate{ min-width:0; }
+  .top5-section{ margin-top:0.6rem; }
+  .slate-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:0 0.15rem 0.4rem;
+  }
+  .slate-head h2{
+    margin:0;
+    font-size:0.68rem;
+    font-weight:800;
+    letter-spacing:0.08em;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+  }
+  .slate-head .updated{
+    font-size:0.58rem;
+    color:var(--ink-dim);
+  }
+  .acca-line{
+    font-size:0.68rem;
+    font-weight:700;
+    color:var(--lime);
+    padding:0 0.15rem 0.5rem;
+  }
+  .acca-line .label{
+    color:var(--ink-dim);
+    font-weight:600;
+    margin-right:0.3rem;
+  }
+
+  ol.picks{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:0.4rem;
+  }
+  li.pick{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:0.5rem 0.65rem;
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
+    backdrop-filter:blur(6px);
+  }
+  li.pick.top{
+    border-color:rgba(186,255,61,0.4);
+    box-shadow:0 0 0 1px rgba(186,255,61,0.15), 0 4px 20px rgba(186,255,61,0.08);
+  }
+
+  .rank{
+    width:1.3rem;
+    height:1.3rem;
+    border-radius:50%;
+    background:rgba(255,255,255,0.06);
+    color:var(--ink-dim);
+    font-size:0.62rem;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  li.pick.top .rank{
+    background:var(--lime);
+    color:#0a1206;
+  }
+
+  .fixture{ flex:1; min-width:0; }
+  .teams{
+    font-size:0.72rem;
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .meta{
+    display:flex;
+    align-items:center;
+    gap:0.35rem;
+    margin-top:0.15rem;
+    font-size:0.58rem;
+    color:var(--ink-dim);
+  }
+  .tag{
+    font-size:0.54rem;
+    font-weight:800;
+    padding:0.05rem 0.35rem;
+    border-radius:5px;
+    letter-spacing:0.02em;
+  }
+  .tag.championship{ background:rgba(255,184,77,0.15); color:var(--amber); }
+  .tag.league_one{ background:rgba(79,216,232,0.15); color:var(--cyan); }
+  .tag.league_two{ background:rgba(167,139,250,0.15); color:var(--violet); }
+  .tag.premier_league{ background:rgba(186,255,61,0.15); color:var(--lime); }
+  .tag.la_liga{ background:rgba(255,138,138,0.15); color:#ff8a8a; }
+  .tag.serie_a{ background:rgba(138,180,255,0.15); color:#8ab4ff; }
+  .tag.bundesliga{ background:rgba(255,214,102,0.15); color:#ffd666; }
+  .tag.ligue_1{ background:rgba(180,255,214,0.15); color:#b4ffd6; }
+
+  .hist{ font-size:0.55rem; color:var(--ink-dim); }
+  .hist.diverges{ color:var(--amber); font-weight:700; }
+
+  .prob{
+    flex-shrink:0;
+    font-size:0.9rem;
+    font-weight:800;
+    color:var(--lime);
+    min-width:2.6rem;
+    text-align:right;
+  }
+  li.pick:not(.top) .prob{ color:var(--ink); opacity:0.85; }
+
+  .empty{
+    color:var(--ink-dim);
+    font-size:0.7rem;
+    padding:0.9rem 0.65rem;
+    background:var(--card);
+    border:1px dashed var(--card-border);
+    border-radius:12px;
+    text-align:center;
+  }
+  .note{
+    color:var(--ink-dim);
+    font-size:0.56rem;
+    padding:0.3rem 0.2rem;
+  }
+
+  @keyframes shimmer{ 0%{opacity:0.35;} 50%{opacity:0.7;} 100%{opacity:0.35;} }
+  .skeleton{
+    height:2.6rem;
+    border-radius:12px;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    animation:shimmer 1.3s ease-in-out infinite;
+  }
+
+  a.nav{
+    color:var(--ink-dim);
+    font-size:0.62rem;
+    font-weight:700;
+    text-decoration:none;
+    border:1px solid var(--card-border);
+    border-radius:999px;
+    padding:0.4rem 0.7rem;
+    flex-shrink:0;
+  }
+  .actions{ display:flex; gap:0.4rem; align-items:center; }
+  .progress{
+    height:3px;
+    border-radius:3px;
+    background:rgba(255,255,255,0.06);
+    overflow:hidden;
+    margin-bottom:0.35rem;
+    opacity:0;
+    transition:opacity .3s;
+  }
+  .progress.on{ opacity:1; }
+  .progress .bar{ height:100%; width:0; background:var(--lime); transition:width .25s; }
+  .status-line{ font-size:0.58rem; color:var(--ink-dim); margin:0 0.15rem 0.6rem; min-height:0.8rem; }
+  .chips{ display:flex; flex-wrap:wrap; gap:0.25rem; margin:0 0 0.7rem; }
+  .chip{
+    font-size:0.52rem; font-weight:800; letter-spacing:0.02em;
+    padding:0.12rem 0.38rem; border-radius:5px;
+    background:rgba(255,255,255,0.05); color:var(--ink-dim);
+    border:1px solid transparent;
+  }
+  .chip.loading{ animation:shimmer 1.3s ease-in-out infinite; }
+  .chip.ok{ color:var(--ink); border-color:var(--card-border); }
+  .chip.none{ opacity:0.45; }
+  .chip.err{ color:var(--amber); border-color:rgba(255,184,77,0.35); }
+</style>
+
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="name">BTTS Top 20</span>
+    <span class="live"><span class="dot"></span>LIVE MODEL</span>
+  </div>
+  <div class="actions">
+    <a class="nav" href="/">EFL</a>
+    <button class="generate" id="generate-btn" onclick="loadPicks()">Generate</button>
+  </div>
+</header>
+
+<div class="progress" id="progress"><div class="bar" id="progress-bar"></div></div>
+<div class="status-line" id="status-line"></div>
+<div class="chips" id="chips"></div>
+<div class="banner" id="coverage-banner"></div>
+
+<main>
+  <section class="slate">
+    <div class="slate-head">
+      <h2>Midweek</h2>
+      <span class="updated" id="midweek-updated">—</span>
+    </div>
+    <div class="acca-line" id="midweek-acca"></div>
+    <ol class="picks" id="midweek-list">
+      <li class="empty">Tap Generate to pull picks</li>
+    </ol>
+  </section>
+
+  <section class="slate">
+    <div class="slate-head">
+      <h2>Weekend</h2>
+      <span class="updated" id="weekend-updated">—</span>
+    </div>
+    <div class="acca-line" id="weekend-acca"></div>
+    <ol class="picks" id="weekend-list">
+      <li class="empty">Tap Generate to pull picks</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+// key, full label, short tag, tag hue
+const LEAGUES = [
+  ['premier_league','Premier League','PL',80],
+  ['la_liga','La Liga','LIGA',0],
+  ['serie_a','Serie A','SA',218],
+  ['bundesliga','Bundesliga','BL',45],
+  ['ligue_1','Ligue 1','L1FR',150],
+  ['primeira_liga','Liga Portugal','POR',120],
+  ['eredivisie','Eredivisie','ERE',28],
+  ['belgian_pro','Belgian Pro League','BEL',55],
+  ['super_lig','Süper Lig','TUR',350],
+  ['scottish_prem','Scottish Premiership','SPL',205],
+  ['championship','Championship','CHA',36],
+  ['bundesliga_2','2. Bundesliga','BL2',60],
+  ['segunda','Segunda División','LIGA2',10],
+  ['austrian_bl','Austrian Bundesliga','AUT',340],
+  ['swiss_super','Swiss Super League','SUI',0],
+  ['greek_super','Greek Super League','GRE',195],
+  ['danish_super','Danish Superliga','DEN',355],
+  ['brasileirao','Brasileirão','BRA',95],
+  ['argentina_lpf','Argentina LPF','ARG',190],
+  ['mls','MLS','MLS',260],
+];
+const META = Object.fromEntries(LEAGUES.map(([k,l,s,h]) => [k,{label:l,short:s,hue:h}]));
+const CONCURRENCY = 8;
+const ACCA_SIZE = 6;
+
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtKickoff(iso){
+  return new Date(iso).toLocaleString('en-GB', { timeZone:'Europe/London', weekday:'short', hour:'2-digit', minute:'2-digit' });
+}
+function fmtGenerated(iso){
+  return new Date(iso).toLocaleString('en-GB', { timeZone:'Europe/London', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+function tagStyle(key){
+  const h = (META[key] || {hue:0}).hue;
+  return `background:hsla(${h},90%,65%,0.15);color:hsl(${h},90%,72%)`;
+}
+
+function renderSkeleton(listEl){
+  listEl.innerHTML = Array(4).fill('<li class="skeleton"></li>').join('');
+}
+
+function renderChips(state){
+  document.getElementById('chips').innerHTML = LEAGUES.map(([k]) => {
+    const s = state[k] || 'idle';
+    const title = s === 'err' ? 'failed' : s === 'none' ? 'no fixtures' : '';
+    return `<span class="chip ${s}" title="${title}">${META[k].short}</span>`;
+  }).join('');
+}
+
+function renderSlate(slate, pool, done, generatedAt){
+  const listEl = document.getElementById(slate + '-list');
+  const accaEl = document.getElementById(slate + '-acca');
+  const updEl = document.getElementById(slate + '-updated');
+  const picks = pool.filter(c => c.slate === slate)
+    .sort((a,b) => b.bttsProbability - a.bttsProbability)
+    .slice(0, ACCA_SIZE);
+
+  if (!picks.length){
+    if (done){
+      listEl.innerHTML = '<li class="empty">No fixtures in this window</li>';
+      updEl.textContent = 'checked ' + fmtGenerated(generatedAt);
+    }
+    accaEl.textContent = '';
+    return;
+  }
+
+  const acca = picks.reduce((p, c) => p * c.bttsProbability, 1);
+  accaEl.innerHTML = `<span class="label">Acca odds</span>${(acca*100).toFixed(1)}%` +
+    (done ? '' : ' <span class="label">· still scanning</span>');
+  updEl.textContent = done ? 'updated ' + fmtGenerated(generatedAt) : 'scanning…';
+
+  const rows = picks.map((p, i) => `
+    <li class="pick ${i === 0 ? 'top' : ''}">
+      <span class="rank">${i+1}</span>
+      <span class="fixture">
+        <div class="teams">${esc(p.home)} v ${esc(p.away)}</div>
+        <div class="meta">
+          <span class="tag" style="${tagStyle(p.league)}">${META[p.league] ? META[p.league].short : esc(p.league)}</span>
+          <span>${fmtKickoff(p.kickoff)}</span>
+        </div>
+      </span>
+      <span class="prob">${Math.round(p.bttsProbability * 100)}%</span>
+    </li>`).join('');
+
+  listEl.innerHTML = rows;
+}
+
+async function fetchLeague(key){
+  const r = await fetch('/api/league-candidates?league=' + encodeURIComponent(key));
+  let body = null;
+  try { body = await r.json(); } catch(e) {}
+  if (!r.ok || !body) throw new Error((body && body.error) || ('HTTP ' + r.status));
+  return body;
+}
+
+let running = false;
+
+async function loadPicks(){
+  if (running) return;
+  running = true;
+  const btn = document.getElementById('generate-btn');
+  const bar = document.getElementById('progress-bar');
+  const progress = document.getElementById('progress');
+  const statusLine = document.getElementById('status-line');
+  const banner = document.getElementById('coverage-banner');
+  btn.disabled = true;
+  btn.textContent = '···';
+  banner.style.display = 'none';
+  progress.classList.add('on');
+  bar.style.width = '0';
+  renderSkeleton(document.getElementById('midweek-list'));
+  renderSkeleton(document.getElementById('weekend-list'));
+  ['midweek','weekend'].forEach(s => {
+    document.getElementById(s + '-acca').textContent = '';
+    document.getElementById(s + '-updated').textContent = '—';
+  });
+
+  const t0 = performance.now();
+  const pool = [];
+  pool.unmatched = [];
+  const chipState = {};
+  const failed = [];
+  const noData = [];
+  let finished = 0;
+  let generatedAt = new Date().toISOString();
+
+  LEAGUES.forEach(([k]) => chipState[k] = 'loading');
+  renderChips(chipState);
+
+  const update = () => {
+    const done = finished === LEAGUES.length;
+    bar.style.width = (finished / LEAGUES.length * 100) + '%';
+    statusLine.textContent = done
+      ? `${pool.length} fixtures scored across ${LEAGUES.length - failed.length - noData.length} leagues · ${((performance.now()-t0)/1000).toFixed(1)}s`
+      : `Scanning leagues ${finished}/${LEAGUES.length}…`;
+    renderChips(chipState);
+    renderSlate('midweek', pool, done, generatedAt);
+    renderSlate('weekend', pool, done, generatedAt);
+  };
+
+  const queue = LEAGUES.map(([k]) => k);
+  const worker = async () => {
+    while (queue.length){
+      const key = queue.shift();
+      try {
+        const data = await fetchLeague(key);
+        generatedAt = data.generatedAt || generatedAt;
+        (data.candidates || []).forEach(c => pool.push(c));
+        (data.unmatched || []).forEach(u => pool.unmatched.push(u));
+        if (data.error) { noData.push(key); chipState[key] = 'err'; }
+        else chipState[key] = (data.candidates || []).length ? 'ok' : 'none';
+      } catch (e) {
+        failed.push(key);
+        chipState[key] = 'err';
+      }
+      finished++;
+      update();
+    }
+  };
+
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+
+  const problems = [...failed, ...noData];
+  if (problems.length){
+    banner.style.display = 'block';
+    banner.textContent = `${problems.map(k => META[k].label).join(', ')} unavailable this run`;
+  }
+  setTimeout(() => progress.classList.remove('on'), 600);
+  btn.disabled = false;
+  btn.textContent = 'Generate';
+  running = false;
+}
+
+renderChips({});
+</script>
+</body>
+</html>

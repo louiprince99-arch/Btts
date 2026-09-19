@@ -82,6 +82,17 @@
     flex-shrink:0;
     box-shadow:0 4px 18px rgba(186,255,61,0.25);
   }
+  .actions{ display:flex; gap:0.4rem; align-items:center; }
+  a.nav{
+    color:var(--ink-dim);
+    font-size:0.62rem;
+    font-weight:700;
+    text-decoration:none;
+    border:1px solid var(--card-border);
+    border-radius:999px;
+    padding:0.4rem 0.7rem;
+    flex-shrink:0;
+  }
   button.generate:active{ transform:scale(0.97); }
   button.generate:disabled{ opacity:0.5; box-shadow:none; }
 
@@ -256,7 +267,10 @@
     <span class="name">Chirish and GLS BTTS Picks</span>
     <span class="live"><span class="dot"></span>LIVE MODEL</span>
   </div>
-  <button class="generate" id="generate-btn" onclick="loadPicks()">Generate</button>
+  <div class="actions">
+    <a class="nav" href="/top20.html">Top 20</a>
+    <button class="generate" id="generate-btn" onclick="loadPicks()">Generate</button>
+  </div>
 </header>
 
 <div class="banner" id="coverage-banner"></div>
