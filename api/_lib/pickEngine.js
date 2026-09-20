@@ -4,6 +4,7 @@ const { buildResolver } = require("./teamMatch");
 const { bttsProbability } = require("./model");
 const { applyScheduleAdjustment } = require("./scheduleAdjust");
 const { applyFormAndHistory } = require("./formStats");
+const { applyFinishing } = require("./finishing");
 
 // Runs the full pipeline for a set of leagues and a date window:
 //   live standings -> schedule-strength adjustment -> venue-specific
@@ -34,6 +35,7 @@ async function computeCandidates(leagueKeys, from, to) {
       matchesFetched: playedMatches.length,
     };
 
+    statsByTeamId = applyFinishing(statsByTeamId, playedMatches);
     statsByTeamId = applyScheduleAdjustment(statsByTeamId, playedMatches);
     statsByTeamId = applyFormAndHistory(statsByTeamId, playedMatches);
 
@@ -72,6 +74,8 @@ async function computeCandidates(leagueKeys, from, to) {
         historicalBttsRate,
         homeExpectedGoals,
         awayExpectedGoals,
+        homeFinishing: homeStats.finishingFactor,
+        awayFinishing: awayStats.finishingFactor,
         homeScheduleStrength: homeStats.scheduleStrength,
         awayScheduleStrength: awayStats.scheduleStrength,
       });
