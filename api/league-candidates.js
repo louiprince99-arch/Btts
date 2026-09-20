@@ -3,6 +3,7 @@ const { buildResolver } = require("./_lib/teamMatch");
 const { bttsProbability, resultProbabilities } = require("./_lib/model");
 const { applyScheduleAdjustment } = require("./_lib/scheduleAdjust");
 const { applyFormAndHistory } = require("./_lib/formStats");
+const { applyFinishing } = require("./_lib/finishing");
 
 // GET /api/league-candidates?league=<key>
 //
@@ -19,7 +20,7 @@ const { applyFormAndHistory } = require("./_lib/formStats");
 // to use them on.
 //
 // Same scoring as every other picker: xG standings -> schedule
-// strength -> venue form -> Poisson BTTS. Also returns home/draw/away
+// finishing -> strength -> venue form -> Poisson BTTS. Also returns home/draw/away
 // win probabilities from the same expected goals (used by top19win).
 
 const TOP20 = new Set([
@@ -90,6 +91,7 @@ module.exports = async (req, res) => {
       });
     }
 
+    stats = applyFinishing(stats, played);
     stats = applyScheduleAdjustment(stats, played);
     stats = applyFormAndHistory(stats, played);
 
@@ -128,6 +130,8 @@ module.exports = async (req, res) => {
             : null,
         homeExpectedGoals,
         awayExpectedGoals,
+        homeFinishing: home.finishingFactor,
+        awayFinishing: away.finishingFactor,
         homeScheduleStrength: home.scheduleStrength,
         awayScheduleStrength: away.scheduleStrength,
       });
