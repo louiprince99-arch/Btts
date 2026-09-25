@@ -264,6 +264,66 @@
     border:1px solid var(--card-border);
     animation:shimmer 1.3s ease-in-out infinite;
   }
+
+  /* How-it-works popup (shows on every open of the home page) */
+  body.hiw-open{ overflow:hidden; }
+  .hiw-overlay{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(3,5,8,0.72);
+    -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    padding:max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  }
+  .hiw-overlay[hidden]{ display:none; }
+  .hiw-card{
+    width:100%; max-width:30rem; max-height:100%;
+    display:flex; flex-direction:column;
+    background:linear-gradient(180deg,#141a22,#0b0f14);
+    border:1px solid rgba(186,255,61,0.25);
+    border-radius:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);
+    overflow:hidden;
+  }
+  .hiw-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:0.6rem;
+    padding:1rem 1rem 0.7rem; border-bottom:1px solid var(--card-border);
+  }
+  .hiw-kicker{ font-size:0.58rem; font-weight:800; letter-spacing:0.1em; color:var(--lime); text-transform:uppercase; }
+  .hiw-title{ margin:0.2rem 0 0; font-size:1.1rem; font-weight:800; letter-spacing:-0.01em; }
+  .hiw-close{
+    background:rgba(255,255,255,0.06); border:none; color:var(--ink-dim);
+    width:2rem; height:2rem; border-radius:50%; font-size:0.9rem; font-weight:800;
+    cursor:pointer; flex-shrink:0; font-family:inherit;
+  }
+  .hiw-body{
+    overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+    padding:0.9rem 1rem 0.3rem; font-size:0.8rem; line-height:1.5; color:#d8dde3;
+  }
+  .hiw-page[hidden]{ display:none; }
+  .hiw-page p{ margin:0 0 0.75rem; }
+  .hiw-page h3{
+    margin:1rem 0 0.35rem; font-size:0.66rem; font-weight:800;
+    letter-spacing:0.08em; text-transform:uppercase; color:var(--lime);
+  }
+  .hiw-page strong{ color:var(--ink); }
+  .hiw-page ol{ margin:0 0 0.75rem; padding-left:1.1rem; }
+  .hiw-page li{ margin-bottom:0.4rem; }
+  .hiw-foot{
+    display:flex; align-items:center; justify-content:space-between; gap:0.6rem;
+    padding:0.7rem 1rem; border-top:1px solid var(--card-border);
+  }
+  .hiw-dots{ display:flex; gap:0.35rem; }
+  .hiw-dots span{ width:7px; height:7px; border-radius:4px; background:rgba(255,255,255,0.18); transition:width .2s, background .2s; }
+  .hiw-dots span.on{ background:var(--lime); width:18px; }
+  .hiw-btns{ display:flex; gap:0.4rem; }
+  .hiw-btn{
+    border:none; border-radius:999px; padding:0.55rem 1.1rem;
+    font-family:inherit; font-size:0.75rem; font-weight:800; cursor:pointer;
+  }
+  .hiw-btn[hidden]{ display:none; }
+  .hiw-btn.ghost{ background:rgba(255,255,255,0.06); color:var(--ink); }
+  .hiw-btn.primary{ background:var(--lime); color:#0a1206; box-shadow:0 4px 18px rgba(186,255,61,0.25); }
+  .hiw-btn:active, .hiw-close:active{ transform:scale(0.97); }
 </style>
 </head>
 <body>
@@ -318,6 +378,68 @@
     </ol>
   </section>
 </main>
+
+<div class="hiw-overlay" id="hiw" role="dialog" aria-modal="true" aria-labelledby="hiw-title">
+  <div class="hiw-card">
+    <div class="hiw-head">
+      <div>
+        <div class="hiw-kicker" id="hiw-kicker">How it works · 1 of 2</div>
+        <h2 class="hiw-title" id="hiw-title">Can't hit a barn door?</h2>
+      </div>
+      <button class="hiw-close" type="button" aria-label="Close" onclick="hiwClose()">✕</button>
+    </div>
+
+    <div class="hiw-body" id="hiw-body">
+      <div class="hiw-page" data-title="Can't hit a barn door?">
+        <p>Right, so here's the score, geezer.</p>
+        <p>Some teams are proper handy at getting into the box. They're all over the opposition, winning corners, and the xG's going through the roof. Then the ball drops to their striker six yards out and he skies it into row Z. Couldn't hit a barn door with a banjo. Week in, week out, same story.</p>
+        <p>The app doesn't fall for it. It looks at what a team <em>should</em> have scored and what they've <em>actually</em> stuck in the onion bag. If they keep bottling it, it goes "nah, son, I've seen you play" and knocks their numbers down.</p>
+        <p>It's not a total muppet about it either. Two bad games could just be a bad week, like the keeper having a blinder or the striker being out on the lash Friday night. So early doors it only gives them a gentle slap on the wrist. If they're <em>still</em> shanking it into the car park after a good few games, the app loses patience and properly marks them down. It can take up to <strong>40%</strong> off their attack.</p>
+        <p>So that side that dominates every game and loses 1-0 won't get lumped on for BTTS just because the stats man loves them. The app wants to see the ball actually hit the net, not a load of "unlucky, lads" and "we were the better side".</p>
+        <p>To be fair, a team full of shocking finishers can still get picked if the opposition defence is absolute Sunday league. Even that lot will score against a back four that's been on the kebabs.</p>
+      </div>
+
+      <div class="hiw-page" data-title="How it picks" hidden>
+        <p>Right, here's how the whole thing works, start to finish.</p>
+
+        <h3>Step 1: Who's playing</h3>
+        <p><strong>EFL:</strong> Championship, League One and League Two, with midweek, Saturday and weekend accas. <strong>Big 5:</strong> Prem, La Liga, Serie A, Bundesliga and Ligue 1 at the weekend. <strong>Top 19:</strong> 19 leagues, from the Prem and La Liga down to the Championship, the Scottish Prem, Brazil and MLS, weekend only. Argentina's been binned because there's no xG data for it, and we don't do guesswork round here.</p>
+
+        <h3>Step 2: The raw numbers</h3>
+        <p>Every team starts with their season xG, which is how many goals they <em>should</em> be scoring and conceding per game on chances alone. Their league position doesn't matter, just the underlying numbers.</p>
+
+        <h3>Step 3: Three reality checks</h3>
+        <ol>
+          <li><strong>Can they finish?</strong> If a team keeps creating chances and shanking them into the car park, their attack gets marked down, by up to 40%. If they're clinical, they get a small boost.</li>
+          <li><strong>Who've they played?</strong> Scoring loads against three relegation fodder sides doesn't mean you're good, son. If a team's played mugs, their numbers get knocked down. If they've played the big boys, they get a bump.</li>
+          <li><strong>Are they on form?</strong> It compares their last 5 home games with their normal home numbers, and the same for away. Home and away are kept separate, because plenty of teams are lions at home and lambs on the road.</li>
+        </ol>
+
+        <h3>Step 4: Size up each game</h3>
+        <p>For each fixture it asks how many a team will score. That's the average of how good their attack is and how leaky the other lot's defence is. You get an expected goals figure for each side.</p>
+
+        <h3>Step 5a: BTTS</h3>
+        <p>From those numbers it works out the chance each team scores at least once, then multiplies the two together. A 70% home chance and an 80% away chance make 56% BTTS. It ranks every game in the slate and the top 6 make the acca.</p>
+
+        <h3>Step 5b: Win (Top 19 Win tab)</h3>
+        <p>It takes the same expected goals and works out the odds of every scoreline, 0-0, 1-0, 2-1, all the way up to 10-10. Adding those up gives home win, draw and away win percentages. It backs whichever side's more likely to win and never takes the draw, because we're not cowards. The 6 strongest favourites across all 19 leagues make the acca.</p>
+
+        <h3>Step 6: The acca odds</h3>
+        <p>The acca % at the top is just the 6 chances multiplied together. That's why it looks a bit grim even when every pick is a banker: 6 picks at 70% each only lands about 12% of the time.</p>
+
+        <p>No bookie odds, no tipsters, no hunches. It's all numbers. If it goes wrong, blame the striker, not the app.</p>
+      </div>
+    </div>
+
+    <div class="hiw-foot">
+      <div class="hiw-dots" id="hiw-dots"><span class="on"></span><span></span></div>
+      <div class="hiw-btns">
+        <button class="hiw-btn ghost" id="hiw-back" type="button" onclick="hiwGo(-1)" hidden>Back</button>
+        <button class="hiw-btn primary" id="hiw-next" type="button" onclick="hiwGo(1)">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <script>
@@ -452,6 +574,62 @@ function loadPicks(){
     btn.textContent = 'Generate';
   });
 }
+
+// How-it-works popup: opens every time the home page loads.
+// Next/Back buttons, swipe left/right, arrow keys; close with ✕,
+// "Let's go" on the last page, tapping outside, or Escape.
+(function(){
+  const overlay = document.getElementById('hiw');
+  const body = document.getElementById('hiw-body');
+  const pages = [...overlay.querySelectorAll('.hiw-page')];
+  const dots = [...document.querySelectorAll('#hiw-dots span')];
+  const back = document.getElementById('hiw-back');
+  const next = document.getElementById('hiw-next');
+  let idx = 0;
+
+  function show(i){
+    idx = Math.max(0, Math.min(pages.length - 1, i));
+    pages.forEach((p, n) => { p.hidden = n !== idx; });
+    dots.forEach((d, n) => d.classList.toggle('on', n === idx));
+    document.getElementById('hiw-title').textContent = pages[idx].dataset.title;
+    document.getElementById('hiw-kicker').textContent = `How it works · ${idx + 1} of ${pages.length}`;
+    back.hidden = idx === 0;
+    next.textContent = idx === pages.length - 1 ? "Let's go" : 'Next';
+    body.scrollTop = 0;
+  }
+
+  window.hiwClose = function(){
+    overlay.hidden = true;
+    document.body.classList.remove('hiw-open');
+  };
+  window.hiwGo = function(step){
+    if (step > 0 && idx === pages.length - 1) return hiwClose();
+    show(idx + step);
+  };
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) hiwClose(); });
+  document.addEventListener('keydown', (e) => {
+    if (overlay.hidden) return;
+    if (e.key === 'Escape') hiwClose();
+    else if (e.key === 'ArrowRight') show(idx + 1);
+    else if (e.key === 'ArrowLeft') show(idx - 1);
+  });
+
+  let sx = null, sy = null;
+  body.addEventListener('touchstart', (e) => {
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, { passive:true });
+  body.addEventListener('touchend', (e) => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) show(idx + (dx < 0 ? 1 : -1));
+    sx = null;
+  });
+
+  document.body.classList.add('hiw-open');
+  show(0);
+})();
 </script>
 </body>
 </html>
